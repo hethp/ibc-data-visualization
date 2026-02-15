@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { mockApi } from '../services/mockApi';
+import { realApi } from '../services/api';
 import type { Consultant } from '../types';
 import '../styles/antd-overrides.css'; // Importing overrides
 
 export function Consultants() {
     const { data: consultants, isLoading } = useQuery({
         queryKey: ['consultants'],
-        queryFn: mockApi.getConsultants,
+        queryFn: realApi.getConsultants,
     });
 
     const columns: ColumnsType<Consultant> = [

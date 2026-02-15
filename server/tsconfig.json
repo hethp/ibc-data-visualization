@@ -41,5 +41,14 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "resolveJsonModule": true
-  }
+  },
+  "exclude": [
+    "test-db.ts",
+    "schema-inspector.js",
+    "test-db.js",
+    "dist"
+  ],
+  "include": [
+    "src/**/*"
+  ]
 }

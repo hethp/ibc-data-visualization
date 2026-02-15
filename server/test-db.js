@@ -1,35 +1,20 @@
-const { Pool } = require('pg');
-const dotenv = require('dotenv');
-const path = require('path');
-
-console.log('Loading .env from:', path.resolve(__dirname, '.env'));
-dotenv.config({ path: path.resolve(__dirname, '.env') });
-
-const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: parseInt(process.env.DB_PORT || '5432'),
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-});
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const db_1 = require("../src/config/db");
 async function testConnection() {
-    console.log('Testing connection to:', process.env.DB_HOST);
+    console.log('Testing database connection...');
     try {
-        const client = await pool.connect();
+        const client = await db_1.pool.connect();
         console.log('Connected successfully!');
         const res = await client.query('SELECT NOW()');
         console.log('Database time:', res.rows[0].now);
         client.release();
         process.exit(0);
-    } catch (err) {
-        console.error('Connection failed:', err.message);
-        if (err.code) {
-            console.error('Error Code:', err.code);
-        }
+    }
+    catch (err) {
+        console.error('Connection failed:', err);
         process.exit(1);
     }
 }
-
 testConnection();
+//# sourceMappingURL=test-db.js.map

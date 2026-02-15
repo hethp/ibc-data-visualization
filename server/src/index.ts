@@ -24,10 +24,10 @@ app.get('/health', async (req, res) => {
     }
 });
 
-// API Routes (Placeholders)
-app.get('/api/semesters', (req, res) => {
-    res.json([{ id: 'mock', name: 'Mock Data (DB Not Connected)' }]);
-});
+import apiRoutes from './routes/api';
+
+// Mount API routes
+app.use('/api', apiRoutes);
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
