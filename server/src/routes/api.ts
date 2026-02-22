@@ -7,7 +7,7 @@ const router = Router();
 router.post('/auth/login', async (req, res) => {
     try {
         const { email } = req.body;
-        
+
         if (!email) {
             return res.status(400).json({ error: 'Email is required' });
         }
@@ -28,8 +28,8 @@ router.post('/auth/login', async (req, res) => {
         }
 
         // Return success with user info (in a real app, you'd generate a token here)
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             user: {
                 email: result.rows[0].email,
                 name: result.rows[0].name
@@ -123,16 +123,16 @@ router.get('/stats', async (req, res) => {
 
         // Project Staffing
         const staffingRes = await pool.query(`
-            SELECT p.project_id, COUNT(cp.user_id) as count
+            SELECT p.project_name, COUNT(cp.user_id) as count
             FROM projects p
             JOIN consultant_projects cp ON p.project_id = cp.project_id
             ${whereSemester}
-            GROUP BY p.project_id
+            GROUP BY p.project_name
         `, params);
 
         const projectStaffing: Record<string, number> = {};
         staffingRes.rows.forEach(row => {
-            projectStaffing[row.project_id] = parseInt(row.count);
+            projectStaffing[row.project_name] = parseInt(row.count);
         });
 
         // Role Distribution (users in this semester)
