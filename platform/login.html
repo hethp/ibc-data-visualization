@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>IBC Platform Login</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      text-align: center;
+      background: white;
+      padding: 50px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      width: 400px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    input[type="email"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: border-color 0.2s ease;
+    }
+
+    input[type="email"]:focus {
+      outline: none;
+      border-color: #2d6cdf;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      background-color: #2d6cdf;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn:hover {
+      background-color: #1b4ea8;
+    }
+
+    .btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      color: #d32f2f;
+      margin-top: 10px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .success-message {
+      color: #2e7d32;
+      margin-top: 10px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>IBC Portal</h1>
+    <p class="subtitle">Please sign in with your consultant email</p>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          placeholder="your.email@example.com" 
+          required 
+          autocomplete="email"
+        />
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn">Sign In</button>
+
+      <div class="error-message" id="errorMessage"></div>
+      <div class="success-message" id="successMessage"></div>
+    </form>
+  </div>
+
+  <script>
+    // API URL - use relative path when served from same origin
+    const API_URL = '/api';
+    
+    const form = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const submitBtn = document.getElementById('submitBtn');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Reset messages
+      errorMessage.classList.remove('show');
+      successMessage.classList.remove('show');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing in...';
+
+      const email = emailInput.value.trim();
+
+      try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Authentication failed');
+        }
+
+        // Store authentication in localStorage
+        localStorage.setItem('ibc_authenticated', 'true');
+        localStorage.setItem('ibc_user_email', data.user.email);
+        localStorage.setItem('ibc_user_name', data.user.name || '');
+
+        // Show success message briefly, then redirect
+        successMessage.textContent = 'Login successful! Redirecting...';
+        successMessage.classList.add('show');
+
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 500);
+
+      } catch (error) {
+        errorMessage.textContent = error.message || 'An error occurred. Please try again.';
+        errorMessage.classList.add('show');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In';
+      }
+    });
+
+    // Check if already authenticated
+    if (localStorage.getItem('ibc_authenticated') === 'true') {
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>
+

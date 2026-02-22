@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { pool } from './config/db';
 
 dotenv.config();
@@ -10,6 +11,9 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from the platform directory
+app.use(express.static(path.join(__dirname, '../../platform')));
 
 // Health check endpoint
 app.get('/health', async (req, res) => {

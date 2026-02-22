@@ -22,6 +22,33 @@
       border-radius: 12px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.08);
       width: 400px;
+      position: relative;
+    }
+
+    .user-info {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .logout-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 8px 16px;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .logout-btn:hover {
+      background-color: #c82333;
     }
 
     h1 {
@@ -48,6 +75,9 @@
 
 <body>
   <div class="container">
+    <button class="logout-btn" id="logoutBtn">Logout</button>
+    <div class="user-info" id="userInfo"></div>
+    
     <h1>IBC Portal</h1>
 
     <a class="btn" href="LINK HERE" target="_blank">
@@ -58,9 +88,43 @@
       Paul Dashboard
     </a>
 
-    <a class="btn" href="PASTE_STAFFING_TOOL_LINK" target="_blank">
+    <a class="btn" href="http://34.58.210.236:3000/" target="_blank">
       Staffing Tool
     </a>
   </div>
+
+  <script>
+    // Check authentication on page load
+    function checkAuthentication() {
+      const isAuthenticated = localStorage.getItem('ibc_authenticated') === 'true';
+      
+      if (!isAuthenticated) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Display user info
+      const userEmail = localStorage.getItem('ibc_user_email') || '';
+      const userName = localStorage.getItem('ibc_user_name') || '';
+      const userInfoEl = document.getElementById('userInfo');
+      
+      if (userName) {
+        userInfoEl.textContent = `Welcome, ${userName}`;
+      } else if (userEmail) {
+        userInfoEl.textContent = userEmail;
+      }
+    }
+
+    // Logout functionality
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('ibc_authenticated');
+      localStorage.removeItem('ibc_user_email');
+      localStorage.removeItem('ibc_user_name');
+      window.location.href = 'login.html';
+    });
+
+    // Run check on page load
+    checkAuthentication();
+  </script>
 </body>
 </html>
