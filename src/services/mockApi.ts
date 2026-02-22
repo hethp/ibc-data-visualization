@@ -20,6 +20,7 @@ const consultants: Consultant[] = [
     { email: 'bob@ibc.com', name: 'Bob Jones', gender: 'Male', active: true, currentRole: 'Sr' },
     { email: 'charlie@ibc.com', name: 'Charlie Day', gender: 'Male', active: true, currentRole: 'A' },
     { email: 'diana@ibc.com', name: 'Diana Prince', gender: 'Female', active: true, currentRole: 'Pc' },
+    { email: 'newconsultant@ibc.com', name: 'New Consultant', gender: 'Other', active: true, currentRole: 'NC' },
     // more mock data would be generated dynamically if needed
 ];
 
@@ -50,7 +51,7 @@ export const mockApi = {
                     totalProjects: semesterId === 'S25' ? 3 : 1,
                     genderDistribution: { 'Male': 25, 'Female': 20 },
                     roleDistribution: {
-                        'PL': 5, 'Pc': 10, 'Sr': 15, 'A': 15, 'T': 0, 'Associate': 0, 'Senior Associate': 0, 'Principal': 0, 'Team Lead': 0
+                        'PL': 5, 'Pc': 10, 'Sr': 15, 'A': 15, 'T': 0, 'NC': 2, 'EC': 1, 'SC': 0, 'PM': 0, 'SM': 0, 'Associate': 0, 'Senior Associate': 0, 'Principal': 0, 'Team Lead': 0
                     },
                     projectStaffing: { 'proj_1': 6, 'proj_2': 5, 'proj_3': 7 }
                 });

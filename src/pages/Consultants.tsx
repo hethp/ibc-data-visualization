@@ -28,7 +28,7 @@ export function Consultants() {
             dataIndex: 'currentRole',
             key: 'currentRole',
             render: (role) => (
-                <Tag color={role === 'PL' ? 'purple' : role === 'Sr' ? 'blue' : 'default'}>
+                <Tag color={role === 'PL' ? 'purple' : role === 'Sr' ? 'blue' : role === 'NC' ? 'green' : 'default'}>
                     {role}
                 </Tag>
             ),
@@ -37,11 +37,15 @@ export function Consultants() {
             title: 'Status',
             dataIndex: 'active',
             key: 'active',
-            render: (active) => (
-                <Tag color={active ? 'success' : 'error'}>
-                    {active ? 'Active' : 'Inactive'}
-                </Tag>
-            ),
+            render: (active, record) => {
+                const role = (record as any).currentRole as string | undefined;
+                const isActive = Boolean(active) || role === 'NC';
+                return (
+                    <Tag color={isActive ? 'success' : 'error'}>
+                        {isActive ? 'Active' : 'Inactive'}
+                    </Tag>
+                );
+            },
         },
         {
             title: 'Gender',

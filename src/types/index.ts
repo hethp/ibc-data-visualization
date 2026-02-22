@@ -1,4 +1,4 @@
-export type Role = 'PL' | 'Pc' | 'Sr' | 'A' | 'T' | 'Associate' | 'Senior Associate' | 'Principal' | 'Team Lead';
+export type Role = 'PL' | 'Pc' | 'Sr' | 'A' | 'T' | 'NC' | 'EC' | 'SC' | 'PM' | 'SM' | 'Associate' | 'Senior Associate' | 'Principal' | 'Team Lead';
 
 export interface Consultant {
     email: string;

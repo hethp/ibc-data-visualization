@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 import { FilterBar } from '../components/filters/FilterBar';
-import { RoleDistributionChart, GenderChart, ProjectStaffingChart } from '../components/dashboard/Charts';
-import { useDashboardStats } from '../hooks/useDashboardData';
+import { RoleDistributionChart, GenderChart, ProjectStaffingChart, ProjectStaffingBlocks } from '../components/dashboard/Charts';
+import { useDashboardStats, useProjects } from '../hooks/useDashboardData';
 import { Users, Briefcase, UserCheck } from 'lucide-react';
 
 export function Dashboard() {
@@ -9,6 +9,7 @@ export function Dashboard() {
     const semesterId = searchParams.get('semester') || '';
 
     const { data: stats, isLoading } = useDashboardStats(semesterId);
+    const { data: projects } = useProjects(semesterId);
 
     return (
         <div className="space-y-8">
@@ -36,10 +37,16 @@ export function Dashboard() {
                         <KpiCard title="Total Projects" value={stats.totalProjects} icon={Briefcase} color="purple" />
                     </div>
 
-                    {/* Charts Grid */}
+                    {/* Charts Grid: place blocks above the staffing chart */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                         <RoleDistributionChart data={stats.roleDistribution} />
                         <GenderChart data={stats.genderDistribution} />
+                        <div className="col-span-1 md:col-span-2">
+                            <ProjectStaffingBlocks data={stats.projectStaffing} projects={projects} />
+                        </div>
+                    </div>
+                    {/* Staffing per project (full-width) */}
+                    <div className="pt-6">
                         <ProjectStaffingChart data={stats.projectStaffing} />
                     </div>
                 </>

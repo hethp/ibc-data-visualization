@@ -144,9 +144,49 @@ router.get('/stats', async (req, res) => {
             GROUP BY cp.role
         `, params);
 
+        // Ensure all known roles are present in the response (default to 0)
+        const ALL_ROLES = ['PL', 'Pc', 'Sr', 'A', 'T', 'NC', 'EC', 'SC', 'PM', 'SM', 'Associate', 'Senior Associate', 'Principal', 'Team Lead'];
         const roleDistribution: Record<string, number> = {};
+        ALL_ROLES.forEach(r => { roleDistribution[r] = 0; });
         roleRes.rows.forEach(row => {
             roleDistribution[row.role] = parseInt(row.count);
+        });
+
+        // Also include users who have a current role but are not assigned to projects
+        // (e.g., NC = new consultants). For the selected semester we only want to
+        // treat users as "unassigned" if they are not in any consultant_projects
+        // for projects in that semester.
+        const extraRoles = ['NC', 'EC', 'SC', 'PM', 'SM'];
+        let unassignedQuery: string;
+        let unassignedParams: any[];
+        if (semesterId) {
+            // $1 = allowed roles array, $2 = semesterId
+            unassignedQuery = `
+                SELECT u.curr_role as role, COUNT(*) as count
+                FROM users u
+                LEFT JOIN consultant_projects cp ON u.user_id = cp.user_id
+                LEFT JOIN projects p ON cp.project_id = p.project_id AND p.project_semester = $2
+                WHERE u.curr_role = ANY($1) AND p.project_id IS NULL
+                GROUP BY u.curr_role
+            `;
+            unassignedParams = [extraRoles, semesterId];
+        } else {
+            // $1 = allowed roles array
+            unassignedQuery = `
+                SELECT u.curr_role as role, COUNT(*) as count
+                FROM users u
+                LEFT JOIN consultant_projects cp ON u.user_id = cp.user_id
+                LEFT JOIN projects p ON cp.project_id = p.project_id
+                WHERE u.curr_role = ANY($1) AND p.project_id IS NULL
+                GROUP BY u.curr_role
+            `;
+            unassignedParams = [extraRoles];
+        }
+
+        const unassignedRes = await pool.query(unassignedQuery, unassignedParams);
+        unassignedRes.rows.forEach(row => {
+            // add unassigned user counts to the distribution (avoid double count)
+            roleDistribution[row.role] = (roleDistribution[row.role] || 0) + parseInt(row.count);
         });
 
         // Gender Distribution
@@ -162,6 +202,8 @@ router.get('/stats', async (req, res) => {
         const genderDistribution: Record<string, number> = {};
         genderRes.rows.forEach(row => {
             genderDistribution[row.gender || 'Unknown'] = parseInt(row.count);
+            genderDistribution[row.gender || 'Male'] = parseInt(row.count);
+            genderDistribution[row.gender || 'Female'] = parseInt(row.count);
         });
 
         // Totals
