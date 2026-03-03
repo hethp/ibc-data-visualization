@@ -6,6 +6,8 @@ export interface Consultant {
     gender?: 'Male' | 'Female' | 'Other';
     active: boolean;
     currentRole?: Role;
+    yearInSchool?: string; // maps to consultants.year
+    major?: string;        // maps to consultants.major
     joinedSemester?: string;
     graduatedSemester?: string;
 }
@@ -43,6 +45,7 @@ export interface DashboardStats {
     genderDistribution: Record<string, number>;
     roleDistribution: Record<Role, number>;
     projectStaffing: Record<string, number>; // projectId -> count
+    demographicChart: Record<string, number>; // yearInSchool -> count
 }
 
 export interface ProjectStats {
@@ -50,4 +53,31 @@ export interface ProjectStats {
     name: string;
     consultantCount: number;
     roles: Record<Role, number>;
+}
+
+// ─── Semester Comparison Types ───
+
+export interface SemesterStats {
+    semesterId: string;
+    totalProjects: number;
+    totalConsultants: number;
+    genderDistribution: Record<string, number>;
+    roleDistribution: Record<string, number>;
+}
+
+export interface ChangeMetric {
+    value: number;
+    percent: number;
+}
+
+export interface ComparisonChanges {
+    totalConsultants: ChangeMetric;
+    totalProjects: ChangeMetric;
+    gender: Record<string, ChangeMetric>;
+    roles: Record<string, ChangeMetric>;
+}
+
+export interface SemesterComparison {
+    semesters: SemesterStats[];
+    changes: ComparisonChanges | null;
 }

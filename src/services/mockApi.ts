@@ -41,19 +41,49 @@ export const mockApi = {
         });
     },
 
-    getStats: async (semesterId: string): Promise<DashboardStats> => {
+    getStats: async (semesterId: string, projectIds?: string[]): Promise<DashboardStats> => {
         return new Promise((resolve) => {
             setTimeout(() => {
                 // Fake aggregation
+                const baseStaffing = { 'proj_1': 6, 'proj_2': 5, 'proj_3': 7 };
+                let projectStaffing: Record<string, number> = baseStaffing;
+                let totalConsultants = 45;
+                let totalProjects = semesterId === 'S25' ? 3 : 1;
+
+                if (projectIds && projectIds.length) {
+                    projectStaffing = projectIds.reduce((acc, id) => {
+                        acc[id] = baseStaffing[id as keyof typeof baseStaffing] || 0;
+                        return acc;
+                    }, {} as Record<string, number>);
+                    totalConsultants = Object.values(projectStaffing).reduce((a, b) => a + b, 0);
+                    totalProjects = projectIds.length;
+                }
+
                 resolve({
-                    totalConsultants: 45,
-                    activeConsultants: 40,
-                    totalProjects: semesterId === 'S25' ? 3 : 1,
-                    genderDistribution: { 'Male': 25, 'Female': 20 },
-                    roleDistribution: {
-                        'PL': 5, 'Pc': 10, 'Sr': 15, 'A': 15, 'T': 0, 'NC': 2, 'EC': 1, 'SC': 0, 'PM': 0, 'SM': 0, 'Associate': 0, 'Senior Associate': 0, 'Principal': 0, 'Team Lead': 0
-                    },
-                    projectStaffing: { 'proj_1': 6, 'proj_2': 5, 'proj_3': 7 }
+                    totalConsultants,
+                    activeConsultants: totalConsultants,
+                    totalProjects,
+                    genderDistribution: projectIds && projectIds.length ? { 'Male': 3, 'Female': 2 } : { 'Male': 25, 'Female': 20 },
+                    roleDistribution: projectIds && projectIds.length
+                        ? { 'PL': 1, 'Pc': 1, 'Sr': 1, 'A': 1, 'T': 0, 'NC': 0, 'EC': 0, 'SC': 0, 'PM': 0, 'SM': 0, 'Associate': 0, 'Senior Associate': 0, 'Principal': 0, 'Team Lead': 0 }
+                        : {
+                              'PL': 5,
+                              'Pc': 10,
+                              'Sr': 15,
+                              'A': 15,
+                              'T': 0,
+                              'NC': 2,
+                              'EC': 1,
+                              'SC': 0,
+                              'PM': 0,
+                              'SM': 0,
+                              'Associate': 0,
+                              'Senior Associate': 0,
+                              'Principal': 0,
+                              'Team Lead': 0,
+                          },
+                    projectStaffing,
+                    demographicChart: { 'Freshman': 8, 'Sophomore': 12, 'Junior': 10, 'Senior': 7, 'Masters': 4, 'Doctorate': 2, 'Unknown': 2 }
                 });
             }, 800);
         });

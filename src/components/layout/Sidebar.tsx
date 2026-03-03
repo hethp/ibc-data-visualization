@@ -1,9 +1,10 @@
-import { LayoutDashboard, Users, FolderKanban, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, FolderKanban, Settings, LogOut, TrendingUp } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import clsx from 'clsx';
 
 const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+    { icon: TrendingUp, label: 'Trends', path: '/trends' },
     { icon: Users, label: 'Consultants', path: '/consultants' },
     { icon: FolderKanban, label: 'Projects', path: '/projects' },
     { icon: Settings, label: 'Settings', path: '/settings' },

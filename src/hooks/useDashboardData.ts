@@ -16,10 +16,18 @@ export function useProjects(semesterId?: string) {
     });
 }
 
-export function useDashboardStats(semesterId: string) {
+export function useDashboardStats(semesterId: string, projectIds?: string[]) {
     return useQuery({
-        queryKey: ['stats', semesterId],
-        queryFn: () => realApi.getStats(semesterId),
+        queryKey: ['stats', semesterId, projectIds ? projectIds.join(',') : undefined],
+        queryFn: () => realApi.getStats(semesterId, projectIds),
         enabled: !!semesterId,
+    });
+}
+
+export function useSemesterComparison(semesterIds: string[]) {
+    return useQuery({
+        queryKey: ['stats-compare', ...semesterIds],
+        queryFn: () => realApi.getComparisonStats(semesterIds),
+        enabled: semesterIds.length >= 2,
     });
 }

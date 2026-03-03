@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Semester, Project, DashboardStats, Consultant } from '../types';
+import type { Semester, Project, DashboardStats, Consultant, SemesterComparison } from '../types';
 
 // Create Axios instance with base URL (env variable)
 const api = axios.create({
@@ -36,8 +36,19 @@ export const realApi = {
         return response.data;
     },
 
-    getStats: async (semesterId: string): Promise<DashboardStats> => {
-        const response = await api.get<DashboardStats>('/stats', { params: { semesterId } });
+    getStats: async (semesterId: string, projectIds?: string[]): Promise<DashboardStats> => {
+        const params: Record<string, string> = { semesterId };
+        if (projectIds && projectIds.length > 0) {
+            params.projects = projectIds.join(',');
+        }
+        const response = await api.get<DashboardStats>('/stats', { params });
+        return response.data;
+    },
+
+    getComparisonStats: async (semesterIds: string[]): Promise<SemesterComparison> => {
+        const response = await api.get<SemesterComparison>('/stats/compare', {
+            params: { semesters: semesterIds.join(',') },
+        });
         return response.data;
     },
 };

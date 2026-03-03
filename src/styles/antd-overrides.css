@@ -30,3 +30,54 @@
 .ant-pagination-item-active a {
     color: white !important;
 }
+
+/* === Multi-select project dropdown dark-mode overrides === */
+
+/* Dropdown popup background */
+.ant-select-dropdown {
+    background: #1f2937 !important;
+    border: 1px solid #374151 !important;
+}
+
+/* All option items — base state */
+.ant-select-item {
+    color: #d1d5db !important;
+}
+
+/* Unselected hover */
+.ant-select-item-option-active:not(.ant-select-item-option-selected) {
+    background: #374151 !important;
+}
+
+/* Selected option — indigo tinted background */
+.ant-select-item-option-selected {
+    background: rgba(99, 102, 241, 0.2) !important;
+    color: #c7d2fe !important;
+    font-weight: 600 !important;
+}
+
+/* Selected + hover */
+.ant-select-item-option-selected.ant-select-item-option-active {
+    background: rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Checkmark icon on selected items */
+.ant-select-item-option-selected .ant-select-item-option-state {
+    color: #818cf8 !important;
+}
+
+/* Multi-select tag chips */
+.ant-select-selection-item {
+    background: #374151 !important;
+    border-color: #4b5563 !important;
+    color: #e5e7eb !important;
+}
+
+/* Tag close button */
+.ant-select-selection-item-remove {
+    color: #9ca3af !important;
+}
+
+.ant-select-selection-item-remove:hover {
+    color: #ef4444 !important;
+}
