@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Semester, Project, DashboardStats, Consultant, SemesterComparison } from '../types';
+import type { Semester, Project, DashboardStats, Consultant, SemesterComparison, Promotion, Drop, Deferral } from '../types';
 
 // Create Axios instance with base URL (env variable)
 const api = axios.create({
@@ -47,6 +47,36 @@ export const realApi = {
 
     getComparisonStats: async (semesterIds: string[]): Promise<SemesterComparison> => {
         const response = await api.get<SemesterComparison>('/stats/compare', {
+            params: { semesters: semesterIds.join(',') },
+        });
+        return response.data;
+    },
+
+    // ── Mock Data Methods (⚠️ for testing only) ──
+
+    getMockComparison: async (semesterIds: string[]): Promise<SemesterComparison & { _mockData: boolean }> => {
+        const response = await api.get('/mock/stats/compare', {
+            params: { semesters: semesterIds.join(',') },
+        });
+        return response.data;
+    },
+
+    getMockPromotions: async (semesterIds: string[]): Promise<{ _mockData: boolean; promotions: Promotion[] }> => {
+        const response = await api.get('/mock/promotions', {
+            params: { semesters: semesterIds.join(',') },
+        });
+        return response.data;
+    },
+
+    getMockDrops: async (semesterIds: string[]): Promise<{ _mockData: boolean; drops: Drop[] }> => {
+        const response = await api.get('/mock/drops', {
+            params: { semesters: semesterIds.join(',') },
+        });
+        return response.data;
+    },
+
+    getMockDeferrals: async (semesterIds: string[]): Promise<{ _mockData: boolean; deferrals: Deferral[] }> => {
+        const response = await api.get('/mock/deferrals', {
             params: { semesters: semesterIds.join(',') },
         });
         return response.data;

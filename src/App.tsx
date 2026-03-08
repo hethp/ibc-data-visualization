@@ -8,7 +8,9 @@ import { Trends } from './pages/Trends';
 
 const queryClient = new QueryClient();
 
-function App() {
+function AppContent() {
+  const isDark = true;
+
   return (
     <QueryClientProvider client={queryClient}>
       <ConfigProvider
@@ -16,24 +18,27 @@ function App() {
           algorithm: theme.darkAlgorithm,
           token: {
             colorPrimary: '#6366f1', // Indigo 500
-            colorBgContainer: '#111827', // Gray 900
+            colorBgContainer: '#111827',
           },
         }}
       >
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<MainLayout />}>
+            <Route path="/" element={<MainLayout />}> 
               <Route index element={<Dashboard />} />
               <Route path="trends" element={<Trends />} />
               <Route path="consultants" element={<Consultants />} />
               <Route path="projects" element={<div className="text-white">Projects Page (Coming Soon)</div>} />
-              <Route path="settings" element={<div className="text-white">Settings Page (Coming Soon)</div>} />
             </Route>
           </Routes>
         </BrowserRouter>
       </ConfigProvider>
     </QueryClientProvider>
   );
+}
+
+function App() {
+  return <AppContent />;
 }
 
 export default App;

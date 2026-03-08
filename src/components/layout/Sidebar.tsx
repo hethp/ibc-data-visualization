@@ -1,13 +1,10 @@
-import { LayoutDashboard, Users, FolderKanban, Settings, LogOut, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, TrendingUp } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
-import clsx from 'clsx';
 
 const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: TrendingUp, label: 'Trends', path: '/trends' },
     { icon: Users, label: 'Consultants', path: '/consultants' },
-    { icon: FolderKanban, label: 'Projects', path: '/projects' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
 export function Sidebar() {
@@ -30,12 +27,11 @@ export function Sidebar() {
                         key={item.path}
                         to={item.path}
                         className={({ isActive }) =>
-                            clsx(
-                                'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group',
+                            `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
                                 isActive
                                     ? 'bg-indigo-600/10 text-indigo-400 font-medium'
                                     : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800/50'
-                            )
+                            }`
                         }
                     >
                         <item.icon

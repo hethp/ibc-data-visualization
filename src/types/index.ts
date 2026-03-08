@@ -1,4 +1,4 @@
-export type Role = 'PL' | 'Pc' | 'Sr' | 'A' | 'T' | 'NC' | 'EC' | 'SC' | 'PM' | 'SM' | 'Associate' | 'Senior Associate' | 'Principal' | 'Team Lead';
+export type Role = 'PL' | 'Pc' | 'Sr' | 'A' | 'T' | 'NC' | 'EC' | 'SC' | 'PM' | 'SM' | 'SD' | 'Associate' | 'Senior Associate' | 'Principal' | 'Team Lead';
 
 export interface Consultant {
     email: string;
@@ -81,3 +81,35 @@ export interface SemesterComparison {
     semesters: SemesterStats[];
     changes: ComparisonChanges | null;
 }
+
+// ─── Mock Data Types (⚠️ for testing only) ───
+
+export interface Promotion {
+    name: string;
+    previousRole: string;
+    newRole: string;
+    fromSemester: string;
+    effectiveSemester: string;
+}
+
+export interface Drop {
+    name: string;
+    lastRole: string;
+    lastSemester: string;
+}
+
+export interface Deferral {
+    name: string;
+    role: string;
+    deferredFrom: string;
+    expectedReturn: string;
+}
+
+export interface MockTrendsData {
+    _mockData: true;
+    comparison: SemesterComparison;
+    promotions: Promotion[];
+    drops: Drop[];
+    deferrals: Deferral[];
+}
+

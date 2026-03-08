@@ -138,6 +138,7 @@ router.get('/stats', async (req, res) => {
             }
         }
         const whereSQL = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+        const hasProjectFilter = !!(projectIdsString && projectIdsString.length > 0);
 
         // Project Staffing
         const staffingRes = await pool.query(`
@@ -154,18 +155,76 @@ router.get('/stats', async (req, res) => {
         });
 
         // Demographic Chart (year in school distribution)
-        const demographicRes = await pool.query(`
-            SELECT COALESCE(c.year, 'Unknown') as year, COUNT(DISTINCT c.user_id) as count
-            FROM consultants c
-            JOIN consultant_projects cp ON c.user_id = cp.user_id
-            JOIN projects p ON cp.project_id = p.project_id
-            ${whereSQL}
-            GROUP BY c.year
-        `, params);
+        // Maps raw DB values to the 4 canonical labels: Freshman, Sophomore, Junior, Senior (+ Unknown fallback)
+        const normalizeYear = (raw: string): string => {
+            const v = (raw || '').trim();
+            if (v === 'Freshman') return 'Freshman';
+            if (v === 'Sophomore') return 'Sophomore';
+            if (v === 'Junior') return 'Junior';
+            if (v === 'Senior') return 'Senior';
+            if (/master/i.test(v)) return 'Master\'s';
+            return 'Unknown';
+        };
+
+        let demographicQuery: string;
+        let demographicParams: any[];
+
+        if (hasProjectFilter) {
+            // Only users on the selected projects
+            demographicQuery = `
+                SELECT COALESCE(c.year, 'Unknown') as year, COUNT(DISTINCT u.user_id) as count
+                FROM users u
+                JOIN consultant_projects cp ON u.user_id = cp.user_id
+                JOIN projects p ON cp.project_id = p.project_id
+                LEFT JOIN consultants c ON u.user_id = c.user_id
+                ${whereSQL}
+                GROUP BY COALESCE(c.year, 'Unknown')
+            `;
+            demographicParams = params;
+        } else if (semesterId) {
+            // All semester users: assigned + unassigned (NCs etc.) — same UNION as gender
+            demographicQuery = `
+                SELECT COALESCE(c.year, 'Unknown') as year, COUNT(DISTINCT u.user_id) as count
+                FROM (
+                    SELECT u2.user_id
+                    FROM users u2
+                    JOIN consultant_projects cp ON u2.user_id = cp.user_id
+                    JOIN projects p ON cp.project_id = p.project_id
+                    WHERE p.project_semester = $1
+                    UNION
+                    SELECT u3.user_id
+                    FROM users u3
+                    WHERE u3.curr_role IN ('NC','EC','SC','PM','SM','SD')
+                    AND u3.user_id NOT IN (
+                        SELECT cp2.user_id FROM consultant_projects cp2
+                        JOIN projects p2 ON cp2.project_id = p2.project_id
+                        WHERE p2.project_semester = $1
+                    )
+                ) u
+                LEFT JOIN consultants c ON u.user_id = c.user_id
+                GROUP BY COALESCE(c.year, 'Unknown')
+            `;
+            demographicParams = [semesterId];
+        } else {
+            demographicQuery = `
+                SELECT COALESCE(c.year, 'Unknown') as year, COUNT(DISTINCT u.user_id) as count
+                FROM users u
+                LEFT JOIN consultants c ON u.user_id = c.user_id
+                GROUP BY COALESCE(c.year, 'Unknown')
+            `;
+            demographicParams = [];
+        }
+
+        const demographicRes = await pool.query(demographicQuery, demographicParams);
 
         const demographicChart: Record<string, number> = {};
         demographicRes.rows.forEach(row => {
-            demographicChart[row.year] = parseInt(row.count);
+            const label = normalizeYear(row.year);
+            demographicChart[label] = (demographicChart[label] || 0) + parseInt(row.count);
+        });
+        // Remove zero-count buckets so chart only shows years that exist in data
+        Object.keys(demographicChart).forEach(k => {
+            if (demographicChart[k] === 0) delete demographicChart[k];
         });
 
         // Role Distribution (users in this semester)
@@ -178,7 +237,7 @@ router.get('/stats', async (req, res) => {
         `, params);
 
         // Ensure all known roles are present in the response (default to 0)
-        const ALL_ROLES = ['PL', 'Pc', 'Sr', 'A', 'T', 'NC', 'EC', 'SC', 'PM', 'SM', 'Associate', 'Senior Associate', 'Principal', 'Team Lead'];
+        const ALL_ROLES = ['PL', 'Pc', 'Sr', 'A', 'T', 'NC', 'EC', 'SC', 'PM', 'SM', 'SD', 'Associate', 'Senior Associate', 'Principal', 'Team Lead'];
         const roleDistribution: Record<string, number> = {};
         ALL_ROLES.forEach(r => { roleDistribution[r] = 0; });
         roleRes.rows.forEach(row => {
@@ -188,7 +247,7 @@ router.get('/stats', async (req, res) => {
         // Only include unassigned users (NCs etc.) when NO specific projects are selected.
         // When viewing a specific project, only show roles of users actually on that project.
         if (!projectIdsString) {
-            const extraRoles = ['NC', 'EC', 'SC', 'PM', 'SM'];
+            const extraRoles = ['NC', 'EC', 'SC', 'PM', 'SM', 'SD'];
             let unassignedQuery: string;
             let unassignedParams: any[];
             if (semesterId) {
@@ -222,8 +281,6 @@ router.get('/stats', async (req, res) => {
         // Gender Distribution — respects project filter
         // When specific projects are selected, only count users on those projects.
         // When just a semester is selected (no project filter), also include unassigned users like NCs.
-        const hasProjectFilter = projectIdsString && projectIdsString.length > 0;
-
         let genderQuery: string;
         let genderParams: any[];
 
@@ -252,7 +309,7 @@ router.get('/stats', async (req, res) => {
                     UNION
                     SELECT u3.user_id, u3.gender
                     FROM users u3
-                    WHERE u3.curr_role IN ('NC','EC','SC','PM','SM')
+                    WHERE u3.curr_role IN ('NC','EC','SC','PM','SM','SD')
                     AND u3.user_id NOT IN (
                         SELECT cp2.user_id FROM consultant_projects cp2
                         JOIN projects p2 ON cp2.project_id = p2.project_id
@@ -420,4 +477,183 @@ router.get('/stats/compare', async (req, res) => {
     }
 });
 
+// ═══════════════════════════════════════════════════════════
+//  MOCK DATA ENDPOINTS — ⚠️ All data below is FAKE / MOCK
+// ═══════════════════════════════════════════════════════════
+
+// Mock semester comparison data (includes fake SP24)
+// Accepts ?semesters=S24,F24,S25 just like the real endpoint
+router.get('/mock/stats/compare', (req, res) => {
+    const { semesters: semesterParam } = req.query;
+
+    const allMockSemesters = [
+        {
+            semesterId: 'S24',
+            totalProjects: 5,
+            totalConsultants: 38,
+            genderDistribution: { Male: 20, Female: 16, Other: 2 },
+            roleDistribution: { NC: 12, EC: 10, SC: 8, PM: 5, SM: 3 },
+        },
+        {
+            semesterId: 'F24',
+            totalProjects: 7,
+            totalConsultants: 44,
+            genderDistribution: { Male: 22, Female: 19, Other: 3 },
+            roleDistribution: { NC: 10, EC: 12, SC: 10, PM: 7, SM: 5 },
+        },
+        {
+            semesterId: 'S25',
+            totalProjects: 8,
+            totalConsultants: 52,
+            genderDistribution: { Male: 26, Female: 22, Other: 4 },
+            roleDistribution: { NC: 14, EC: 13, SC: 11, PM: 8, SM: 6 },
+        },
+    ];
+
+    // Filter to requested semesters (or return all if none specified)
+    let selected = allMockSemesters;
+    if (semesterParam && typeof semesterParam === 'string') {
+        const ids = semesterParam.split(',').map(s => s.trim()).filter(Boolean);
+        if (ids.length > 0) {
+            selected = allMockSemesters.filter(s => ids.includes(s.semesterId));
+        }
+    }
+
+    // Sort chronologically
+    const semOrder = (id: string) => {
+        const season = id.charAt(0);
+        const yr = parseInt(id.slice(1), 10);
+        return yr * 10 + (season === 'S' ? 0 : 5);
+    };
+    selected.sort((a, b) => semOrder(a.semesterId) - semOrder(b.semesterId));
+
+    // Compute changes between last two entries
+    const delta = (c: number, p: number) => ({
+        value: c - p,
+        percent: p === 0 ? (c === 0 ? 0 : 100) : parseFloat((((c - p) / p) * 100).toFixed(1)),
+    });
+
+    let changes: any = null;
+    if (selected.length >= 2) {
+        const prev = selected[selected.length - 2]!;
+        const curr = selected[selected.length - 1]!;
+
+        const allGenders = new Set([...Object.keys(curr.genderDistribution), ...Object.keys(prev.genderDistribution)]);
+        const genderChanges: Record<string, any> = {};
+        allGenders.forEach(g => {
+            genderChanges[g] = delta(
+                curr.genderDistribution[g as keyof typeof curr.genderDistribution] || 0,
+                prev.genderDistribution[g as keyof typeof prev.genderDistribution] || 0,
+            );
+        });
+
+        const allRoles = new Set([...Object.keys(curr.roleDistribution), ...Object.keys(prev.roleDistribution)]);
+        const roleChanges: Record<string, any> = {};
+        allRoles.forEach(r => {
+            roleChanges[r] = delta(
+                curr.roleDistribution[r as keyof typeof curr.roleDistribution] || 0,
+                prev.roleDistribution[r as keyof typeof prev.roleDistribution] || 0,
+            );
+        });
+
+        changes = {
+            totalConsultants: delta(curr.totalConsultants, prev.totalConsultants),
+            totalProjects: delta(curr.totalProjects, prev.totalProjects),
+            gender: genderChanges,
+            roles: roleChanges,
+        };
+    }
+
+    res.json({
+        _mockData: true,
+        semesters: selected,
+        changes,
+    });
+});
+
+// Mock promotions data — ⚠️ FAKE NAMES & DATA
+// Promotions happen *between* semesters. The "effectiveSemester" is the semester
+// where the new role takes effect, and "fromSemester" is the previous semester.
+// Accepts ?semesters= to filter to only transitions between selected semesters.
+router.get('/mock/promotions', (req, res) => {
+    const allPromotions = [
+        // Promoted after S24, effective in F24
+        { name: 'Mock User - Drew Williams', previousRole: 'NC', newRole: 'EC', fromSemester: 'S24', effectiveSemester: 'F24' },
+        { name: 'Mock User - Morgan Lee', previousRole: 'EC', newRole: 'SC', fromSemester: 'S24', effectiveSemester: 'F24' },
+        { name: 'Mock User - Avery Brown', previousRole: 'SC', newRole: 'PM', fromSemester: 'S24', effectiveSemester: 'F24' },
+        { name: 'Mock User - Quinn Davis', previousRole: 'PM', newRole: 'SM', fromSemester: 'S24', effectiveSemester: 'F24' },
+        { name: 'Mock User - Blake Johnson', previousRole: 'NC', newRole: 'EC', fromSemester: 'S24', effectiveSemester: 'F24' },
+        // Promoted after F24, effective in S25
+        { name: 'Mock User - Alex Chen', previousRole: 'NC', newRole: 'EC', fromSemester: 'F24', effectiveSemester: 'S25' },
+        { name: 'Mock User - Jamie Rivera', previousRole: 'NC', newRole: 'EC', fromSemester: 'F24', effectiveSemester: 'S25' },
+        { name: 'Mock User - Taylor Kim', previousRole: 'EC', newRole: 'SC', fromSemester: 'F24', effectiveSemester: 'S25' },
+        { name: 'Mock User - Jordan Patel', previousRole: 'EC', newRole: 'SC', fromSemester: 'F24', effectiveSemester: 'S25' },
+        { name: 'Mock User - Casey Morgan', previousRole: 'SC', newRole: 'PM', fromSemester: 'F24', effectiveSemester: 'S25' },
+        { name: 'Mock User - Riley Thompson', previousRole: 'SC', newRole: 'PM', fromSemester: 'F24', effectiveSemester: 'S25' },
+        { name: 'Mock User - Sam Nguyen', previousRole: 'PM', newRole: 'SM', fromSemester: 'F24', effectiveSemester: 'S25' },
+    ];
+
+    // Filter: only include promotions where BOTH fromSemester and effectiveSemester are in the selected set
+    const { semesters: semesterParam } = req.query;
+    let filtered = allPromotions;
+    if (semesterParam && typeof semesterParam === 'string') {
+        const ids = new Set(semesterParam.split(',').map(s => s.trim()).filter(Boolean));
+        if (ids.size > 0) {
+            filtered = allPromotions.filter(p => ids.has(p.fromSemester) && ids.has(p.effectiveSemester));
+        }
+    }
+
+    res.json({ _mockData: true, promotions: filtered });
+});
+
+// Mock drops data — ⚠️ FAKE NAMES & DATA
+// Drops = people who left IBC entirely (no reason collected)
+router.get('/mock/drops', (req, res) => {
+    const allDrops = [
+        { name: 'Mock User - Chris Anderson', lastRole: 'NC', lastSemester: 'F24' },
+        { name: 'Mock User - Pat Wilson', lastRole: 'EC', lastSemester: 'F24' },
+        { name: 'Mock User - Robin Garcia', lastRole: 'NC', lastSemester: 'F24' },
+        { name: 'Mock User - Jesse Taylor', lastRole: 'SC', lastSemester: 'S24' },
+        { name: 'Mock User - Harper Moore', lastRole: 'NC', lastSemester: 'S24' },
+        { name: 'Mock User - Finley Clark', lastRole: 'EC', lastSemester: 'S24' },
+        { name: 'Mock User - Reese Hall', lastRole: 'NC', lastSemester: 'S24' },
+        { name: 'Mock User - Dakota Young', lastRole: 'PM', lastSemester: 'S24' },
+    ];
+
+    const { semesters: semesterParam } = req.query;
+    let filtered = allDrops;
+    if (semesterParam && typeof semesterParam === 'string') {
+        const ids = new Set(semesterParam.split(',').map(s => s.trim()).filter(Boolean));
+        if (ids.size > 0) {
+            filtered = allDrops.filter(d => ids.has(d.lastSemester));
+        }
+    }
+
+    res.json({ _mockData: true, drops: filtered });
+});
+
+// Mock deferrals data — ⚠️ FAKE NAMES & DATA
+// Deferrals = people who are inactive but NOT dropped (taking a semester off)
+router.get('/mock/deferrals', (req, res) => {
+    const allDeferrals = [
+        { name: 'Mock User - Sage Mitchell', role: 'EC', deferredFrom: 'S25', expectedReturn: 'F25' },
+        { name: 'Mock User - Kai Hernandez', role: 'SC', deferredFrom: 'S25', expectedReturn: 'F25' },
+        { name: 'Mock User - Rowan Price', role: 'NC', deferredFrom: 'F24', expectedReturn: 'S25' },
+        { name: 'Mock User - Emery Brooks', role: 'EC', deferredFrom: 'F24', expectedReturn: 'S25' },
+        { name: 'Mock User - Lennox Reed', role: 'NC', deferredFrom: 'S24', expectedReturn: 'F24' },
+    ];
+
+    const { semesters: semesterParam } = req.query;
+    let filtered = allDeferrals;
+    if (semesterParam && typeof semesterParam === 'string') {
+        const ids = new Set(semesterParam.split(',').map(s => s.trim()).filter(Boolean));
+        if (ids.size > 0) {
+            filtered = allDeferrals.filter(d => ids.has(d.deferredFrom));
+        }
+    }
+
+    res.json({ _mockData: true, deferrals: filtered });
+});
+
 export default router;
+

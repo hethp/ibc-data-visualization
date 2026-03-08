@@ -1,6 +1,5 @@
 import type { Semester, Project, Consultant, DashboardStats } from '../types';
 
-// Mock Data
 const semesters: Semester[] = [
     { id: 'S25', name: 'Spring 2025', startDate: '2025-01-20', endDate: '2025-05-10', isActive: true },
     { id: 'F24', name: 'Fall 2024', startDate: '2024-08-25', endDate: '2024-12-15', isActive: false },
@@ -83,7 +82,7 @@ export const mockApi = {
                               'Team Lead': 0,
                           },
                     projectStaffing,
-                    demographicChart: { 'Freshman': 8, 'Sophomore': 12, 'Junior': 10, 'Senior': 7, 'Masters': 4, 'Doctorate': 2, 'Unknown': 2 }
+                    demographicChart: { 'Freshman': 8, 'Sophomore': 12, 'Junior': 10, 'Senior': 7, 'Master\'s': 4 }
                 });
             }, 800);
         });

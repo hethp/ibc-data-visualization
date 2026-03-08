@@ -1,5 +1,6 @@
+import React, { useState } from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, LabelList } from 'recharts';
-import type { DashboardStats, Project } from '../../types';
+import type { DashboardStats, Project, Role } from '../../types';
 
 const COLORS = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'];
 const GENDER_COLORS = { 'Male': '#3b82f6', 'Female': '#ec4899', 'Unknown': '#e1e33f' };
@@ -9,23 +10,31 @@ const ROLE_COLORS: Record<string, string> = {
     'Sr': '#a855f7',
     'A': '#d946ef',
     'T': '#ec4899',
-    'NC': '#E3B4F7', // New Consultant — green
-    'EC': '#AB5DCD', // Example Consultant
-    'SC': '#8F32B8', // Senior Consultant
-    'PM': '#811CAD', // Project Manager
-    'SM': '#7306A2', // Scrum Master / Senior Manager
+    'NC': '#E3B4F7',
+    'EC': '#AB5DCD',
+    'SC': '#8F32B8',
+    'PM': '#811CAD',
+    'SM': '#7306A2',
     'Associate': '#f43f5e',
     'Senior Associate': '#f59e0b',
     'Principal': '#3b82f6',
-    'Team Lead': '#06b6d4'
+    'Team Lead': '#06b6d4',
 };
-const YEAR_COLORS = { 'Freshman': '#a855f7', 'Unknown': '#ec4899', 'Sophomore': '#f59e0b', 'Junior': '#3b82f6', 'Senior': '#e1e33f', 'Masters': '#7306A2', 'Doctorate': '#06b6d4' };
-
+const YEAR_COLORS: Record<string, string> = {
+    'Freshman': '#a855f7',
+    'Sophomore': '#f59e0b',
+    'Junior': '#3b82f6',
+    'Senior': '#e1e33f',
+    'Master\'s': '#7306A2',
+};
 
 export function RoleDistributionChart({ data }: { data: DashboardStats['roleDistribution'] }) {
-    // Only show these roles, in this specific order
-    const allowedRoles = ['NC', 'EC', 'SC', 'PM', 'SM'];
-    const chartData = allowedRoles.map(r => ({ role: r, count: data[r] || 0 }));
+    // Only show a subset of roles in a consistent order
+    const allowedRoles: Role[] = ['NC', 'EC', 'SC', 'PM', 'SM', 'SD'];
+    const chartData = allowedRoles.map((r) => ({ role: r, count: data[r] ?? 0 }));
+    const total = chartData.reduce((sum, entry) => sum + entry.count, 0);
+
+    const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
     return (
         <div className="h-80 w-full bg-gray-900 border border-gray-800 rounded-xl p-4">
@@ -35,15 +44,34 @@ export function RoleDistributionChart({ data }: { data: DashboardStats['roleDist
                     <XAxis dataKey="role" stroke="#6b7280" fontSize={12} />
                     <YAxis stroke="#6b7280" fontSize={12} />
                     <Tooltip
-                        contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', borderRadius: 8 }}
+                        contentStyle={{
+                            backgroundColor: '#1f2937',
+                            borderColor: '#374151',
+                            borderRadius: 8,
+                        }}
                         labelStyle={{ color: '#f3f4f6' }}
                         itemStyle={{ color: '#c7d2fe' }}
+                        cursor={{ fill: 'transparent' }}
+                        formatter={(value: number, name: string) => {
+                            const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+                            return [`${name}: ${value} (${percent}%)`, 'Consultants'];
+                        }}
                     />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    <Bar
+                        dataKey="count"
+                        radius={[4, 4, 0, 0]}
+                        onMouseEnter={(_data: any, index: number) => setActiveIndex(index)}
+                        onMouseLeave={() => setActiveIndex(null)}
+                    >
                         {chartData.map((entry, index) => (
                             <Cell
                                 key={`cell-${entry.role}`}
                                 fill={ROLE_COLORS[entry.role] || COLORS[index % COLORS.length]}
+                                style={{
+                                    transition: 'transform 0.15s ease',
+                                    transform: activeIndex === index ? 'scale(1.08)' : undefined,
+                                    transformOrigin: 'center bottom',
+                                }}
                             />
                         ))}
                     </Bar>
@@ -55,6 +83,7 @@ export function RoleDistributionChart({ data }: { data: DashboardStats['roleDist
 
 export function GenderChart({ data }: { data: DashboardStats['genderDistribution'] }) {
     const chartData = Object.entries(data).map(([gender, count]) => ({ name: gender, value: count }));
+    const total = chartData.reduce((sum, entry) => sum + entry.value, 0);
 
     return (
         <div className="h-80 w-full bg-gray-900 border border-gray-800 rounded-xl p-4">
@@ -71,13 +100,24 @@ export function GenderChart({ data }: { data: DashboardStats['genderDistribution
                         dataKey="value"
                     >
                         {chartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={GENDER_COLORS[entry.name as keyof typeof GENDER_COLORS] || COLORS[index % COLORS.length]} />
+                            <Cell
+                                key={`cell-${index}`}
+                                fill={GENDER_COLORS[entry.name as keyof typeof GENDER_COLORS] || COLORS[index % COLORS.length]}
+                            />
                         ))}
                     </Pie>
                     <Tooltip
-                        contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', borderRadius: 8 }}
+                        contentStyle={{
+                            backgroundColor: '#1f2937',
+                            borderColor: '#374151',
+                            borderRadius: 8,
+                        }}
                         labelStyle={{ color: '#f3f4f6' }}
                         itemStyle={{ color: '#f9a8d4' }}
+                        formatter={(value: number, name: string) => {
+                            const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+                            return [`${name}: ${value} (${percent}%)`, 'Consultants'];
+                        }}
                     />
                     <Legend />
                 </PieChart>
@@ -86,13 +126,15 @@ export function GenderChart({ data }: { data: DashboardStats['genderDistribution
     );
 }
 
-export function ProjectStaffingBlocks({ data }: { data: DashboardStats['projectStaffing'], projects?: Project[] }) {
-    const entries = Object.entries(data).map(([projName, count]) => ({
-        name: projName,
-        count,
-    })).sort((a, b) => b.count - a.count); // sort by headcount descending
+export function ProjectStaffingBlocks({ data }: { data: DashboardStats['projectStaffing']; projects?: Project[] }) {
+    const entries = Object.entries(data)
+        .map(([projName, count]) => ({
+            name: projName,
+            count,
+        }))
+        .sort((a, b) => b.count - a.count);
 
-    const max = Math.max(...entries.map(e => e.count), 1);
+    const max = Math.max(...entries.map((e) => e.count), 1);
 
     return (
         <div className="w-full bg-gray-900 border border-gray-800 rounded-xl p-5">
@@ -104,8 +146,13 @@ export function ProjectStaffingBlocks({ data }: { data: DashboardStats['projectS
                     return (
                         <div key={e.name} className="group">
                             <div className="flex items-center justify-between mb-1">
-                                <span className="text-sm text-gray-300 font-medium truncate max-w-[70%]">{e.name}</span>
-                                <span className="text-sm text-white font-bold tabular-nums">{e.count} <span className="text-gray-500 font-normal text-xs">consultants</span></span>
+                                <span className="text-sm text-gray-300 font-medium truncate max-w-[70%]">
+                                    {e.name}
+                                </span>
+                                <span className="text-sm text-white font-bold tabular-nums">
+                                    {e.count}{' '}
+                                    <span className="text-gray-500 font-normal text-xs">consultants</span>
+                                </span>
                             </div>
                             <div className="w-full h-2.5 bg-gray-800 rounded-full overflow-hidden">
                                 <div
@@ -124,7 +171,6 @@ export function ProjectStaffingBlocks({ data }: { data: DashboardStats['projectS
     );
 }
 
-
 interface StaffingChartProps {
     data: DashboardStats['projectStaffing'];
     onBarClick?: (projectId: string) => void;
@@ -133,29 +179,28 @@ interface StaffingChartProps {
 }
 
 export function ProjectStaffingChart({ data, onBarClick, selectedProjects = [], projects = [] }: StaffingChartProps) {
-    // Build a lookup from project ID to project name
     const idToName: Record<string, string> = {};
-    projects.forEach(p => { idToName[p.id] = p.name; });
+    projects.forEach((p) => {
+        idToName[p.id] = p.name;
+    });
 
-    // Build array: data keys are project IDs, display as names
     const chartData = Object.entries(data)
         .map(([projId, count]) => ({
             projectId: projId,
-            project: idToName[projId] || projId, // fallback to raw ID
+            project: idToName[projId] || projId,
             consultants: count,
         }))
         .sort((a, b) => b.consultants - a.consultants);
 
-    // Dynamic height based on number of projects (at least 280, 42px per bar)
     const dynamicHeight = Math.max(280, chartData.length * 42 + 60);
     const hasSelection = selectedProjects.length > 0;
 
     return (
-        <div className="w-full bg-gray-900 border border-gray-800 rounded-xl p-5 col-span-1 md:col-span-2" style={{ height: dynamicHeight + 50 }}>
+        <div
+            className="w-full bg-gray-900 border border-gray-800 rounded-xl p-5 col-span-1 md:col-span-2"
+            style={{ height: dynamicHeight + 50 }}
+        >
             <h3 className="text-gray-400 font-medium mb-1 text-sm">Consultants per Project</h3>
-            <p className="text-gray-600 text-xs mb-4">
-                {onBarClick ? 'Click a bar to filter dashboard by that project' : 'Horizontal bars show how many consultants are staffed on each project'}
-            </p>
             <ResponsiveContainer width="100%" height={dynamicHeight - 40}>
                 <BarChart
                     data={chartData}
@@ -184,7 +229,11 @@ export function ProjectStaffingChart({ data, onBarClick, selectedProjects = [], 
                         tick={{ fill: '#d1d5db' }}
                     />
                     <Tooltip
-                        contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', borderRadius: 8 }}
+                        contentStyle={{
+                            backgroundColor: '#1f2937',
+                            borderColor: '#374151',
+                            borderRadius: 8,
+                        }}
                         labelStyle={{ color: '#f3f4f6' }}
                         itemStyle={{ color: '#c7d2fe' }}
                         formatter={(value) => [`${value} consultants`, 'Team Size']}
@@ -213,39 +262,39 @@ export function ProjectStaffingChart({ data, onBarClick, selectedProjects = [], 
 }
 
 export function DemographicChart({ data }: { data: DashboardStats['demographicChart'] }) {
-    const yearOrder = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Masters', 'Doctorate', 'Unknown'];
+    const yearOrder = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Master\'s'];
     const chartData = yearOrder
-        .filter(y => data[y] !== undefined)
-        .map(y => ({ name: y, value: data[y] }));
+        .filter((y) => data[y] !== undefined)
+        .map((y) => ({ name: y, value: data[y] }));
+    const total = chartData.reduce((sum, entry) => sum + entry.value, 0);
 
     return (
         <div className="h-80 w-full bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <h3 className="text-gray-400 font-medium mb-4">Class Year Distribution</h3>
             <ResponsiveContainer width="100%" height="85%">
-                <PieChart>
-                    <Pie
-                        data={chartData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                    >
-                        {chartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={YEAR_COLORS[entry.name as keyof typeof YEAR_COLORS] || COLORS[index % COLORS.length]} />
-                        ))}
-                    </Pie>
+                <BarChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+                    <XAxis dataKey="name" stroke="#6b7280" fontSize={11} tick={{ fill: '#d1d5db' }} />
+                    <YAxis stroke="#6b7280" fontSize={11} tick={{ fill: '#d1d5db' }} allowDecimals={false} />
                     <Tooltip
-                        contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', borderRadius: 8 }}
+                        contentStyle={{
+                            backgroundColor: '#1f2937',
+                            borderColor: '#374151',
+                            borderRadius: 8,
+                        }}
                         labelStyle={{ color: '#f3f4f6' }}
                         itemStyle={{ color: '#c4b5fd' }}
+                        cursor={{ fill: 'rgba(99,102,241,0.08)' }}
+                        formatter={(value: number, _name: string, props: any) => {
+                            const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+                            return [`${value} students (${percent}%)`, props.payload.name];
+                        }}
                     />
-                    <Legend />
-                </PieChart>
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={48}>
+                        {chartData.map((entry) => (
+                            <Cell key={`cell-${entry.name}`} fill={YEAR_COLORS[entry.name] || '#6366f1'} />
+                        ))}
+                    </Bar>
+                </BarChart>
             </ResponsiveContainer>
         </div>
     );
 }
-
-

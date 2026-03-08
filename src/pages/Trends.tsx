@@ -1,7 +1,14 @@
 import { useState } from 'react';
-import { Select } from 'antd';
+import { Select, Switch } from 'antd';
 import { Users, Briefcase, TrendingUp } from 'lucide-react';
-import { useSemesters, useSemesterComparison } from '../hooks/useDashboardData';
+import {
+    useSemesters,
+    useSemesterComparison,
+    useMockComparison,
+    useMockPromotions,
+    useMockDrops,
+    useMockDeferrals,
+} from '../hooks/useDashboardData';
 import { TrendCard, DemographicChangeCard } from '../components/trends/TrendCards';
 import {
     ConsultantsTrendChart,
@@ -9,6 +16,21 @@ import {
     GenderTrendChart,
     RoleTrendChart,
 } from '../components/trends/TrendCharts';
+import {
+    MockDataBanner,
+    PromotionsChart,
+    DropsChart,
+    DeferralsChart,
+    PromotionsTable,
+    DropsTable,
+    DeferralsTable,
+} from '../components/trends/PromotionsDropsCards';
+
+const MOCK_SEMESTERS = [
+    { id: 'S24', name: 'Spring 2024 (Mock)' },
+    { id: 'F24', name: 'Fall 2024 (Mock)' },
+    { id: 'S25', name: 'Spring 2025 (Mock)' },
+];
 
 const GENDER_COLORS: Record<string, string> = {
     Male: '#3b82f6',
@@ -28,8 +50,25 @@ const ROLE_COLORS: Record<string, string> = {
 export function Trends() {
     const { data: semesters, isLoading: loadingSemesters } = useSemesters();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [mockMode, setMockMode] = useState(false);
 
-    const { data: comparison, isLoading: loadingComparison } = useSemesterComparison(selectedIds);
+    // Real data hook
+    const { data: comparison, isLoading: loadingComparison } = useSemesterComparison(
+        mockMode ? [] : selectedIds  // disable real query when in mock mode
+    );
+
+    // Mock data hooks — pass selected semester IDs so data is filtered
+    const { data: mockComparison, isLoading: loadingMock } = useMockComparison(selectedIds, mockMode);
+    const { data: mockPromotions } = useMockPromotions(selectedIds, mockMode);
+    const { data: mockDrops } = useMockDrops(selectedIds, mockMode);
+    const { data: mockDeferrals } = useMockDeferrals(selectedIds, mockMode);
+
+    // Use mock or real data depending on toggle
+    const activeComparison = mockMode ? mockComparison : comparison;
+    const isLoading = mockMode ? loadingMock : loadingComparison;
+
+    // The dropdown options depend on mock mode
+    const dropdownOptions = mockMode ? MOCK_SEMESTERS : (semesters ?? []).map(s => ({ id: s.id, name: s.name }));
 
     return (
         <div className="space-y-8">
@@ -44,29 +83,49 @@ export function Trends() {
                     </p>
                 </div>
 
-                {/* Multi-semester selector */}
-                <div className="flex flex-col gap-1">
-                    <label className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                        Select Semesters (min 2)
-                    </label>
-                    <Select
-                        mode="multiple"
-                        className="w-72"
-                        placeholder="Pick semesters to compare…"
-                        loading={loadingSemesters}
-                        value={selectedIds}
-                        onChange={(values: string[]) => setSelectedIds(values)}
-                        popupClassName="bg-gray-800 text-white"
-                        maxTagCount={4}
-                    >
-                        {semesters?.map(sem => (
-                            <Select.Option key={sem.id} value={sem.id}>
-                                {sem.name}
-                            </Select.Option>
-                        ))}
-                    </Select>
+                <div className="flex items-center gap-6">
+                    {/* Mock data toggle */}
+                    <div className="flex items-center gap-2">
+                        <Switch
+                            checked={mockMode}
+                            onChange={(checked) => {
+                                setMockMode(checked);
+                                setSelectedIds([]); // clear selections when switching modes
+                            }}
+                            className={mockMode ? '!bg-amber-500' : ''}
+                        />
+                        <span className={`text-xs font-medium uppercase tracking-wider ${mockMode ? 'text-amber-400' : 'text-gray-500'}`}>
+                            Mock Data
+                        </span>
+                    </div>
+
+                    {/* Semester selector — always visible, options change based on mode */}
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                            Select Semesters (min 2)
+                        </label>
+                        <Select
+                            mode="multiple"
+                            className="w-72"
+                            placeholder={mockMode ? 'Pick mock semesters to compare…' : 'Pick semesters to compare…'}
+                            loading={!mockMode && loadingSemesters}
+                            value={selectedIds}
+                            onChange={(values: string[]) => setSelectedIds(values)}
+                            popupClassName="bg-gray-800 text-white"
+                            maxTagCount={4}
+                        >
+                            {dropdownOptions.map(sem => (
+                                <Select.Option key={sem.id} value={sem.id}>
+                                    {sem.name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </div>
                 </div>
             </div>
+
+            {/* Mock data banner */}
+            {mockMode && <MockDataBanner />}
 
             {/* State: not enough semesters */}
             {selectedIds.length < 2 && (
@@ -79,35 +138,35 @@ export function Trends() {
             )}
 
             {/* Loading */}
-            {selectedIds.length >= 2 && loadingComparison && (
+            {selectedIds.length >= 2 && isLoading && (
                 <div className="h-64 flex items-center justify-center text-indigo-400 animate-pulse">
                     Crunching the numbers…
                 </div>
             )}
 
             {/* Data */}
-            {comparison && comparison.changes && (
+            {activeComparison && activeComparison.changes && (
                 <>
                     {/* ── KPI Change Cards ── */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <TrendCard
                             title="Total Consultants"
-                            latestValue={comparison.semesters[comparison.semesters.length - 1]?.totalConsultants ?? 0}
-                            change={comparison.changes.totalConsultants}
+                            latestValue={activeComparison.semesters[activeComparison.semesters.length - 1]?.totalConsultants ?? 0}
+                            change={activeComparison.changes.totalConsultants}
                             icon={Users}
                             accentColor="indigo"
                         />
                         <TrendCard
                             title="Total Projects"
-                            latestValue={comparison.semesters[comparison.semesters.length - 1]?.totalProjects ?? 0}
-                            change={comparison.changes.totalProjects}
+                            latestValue={activeComparison.semesters[activeComparison.semesters.length - 1]?.totalProjects ?? 0}
+                            change={activeComparison.changes.totalProjects}
                             icon={Briefcase}
                             accentColor="purple"
                         />
                         {/* Average team size = consultants / projects */}
                         {(() => {
-                            const latest = comparison.semesters[comparison.semesters.length - 1];
-                            const prev = comparison.semesters[comparison.semesters.length - 2];
+                            const latest = activeComparison.semesters[activeComparison.semesters.length - 1];
+                            const prev = activeComparison.semesters[activeComparison.semesters.length - 2];
                             const currAvg = latest && latest.totalProjects > 0
                                 ? Math.round(latest.totalConsultants / latest.totalProjects)
                                 : 0;
@@ -133,7 +192,7 @@ export function Trends() {
                         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                             <h3 className="text-gray-400 font-medium mb-3 text-sm">Gender Changes (latest vs previous)</h3>
                             <div className="space-y-2">
-                                {Object.entries(comparison.changes.gender).map(([g, change]) => (
+                                {Object.entries(activeComparison.changes.gender).map(([g, change]) => (
                                     <DemographicChangeCard
                                         key={g}
                                         label={g}
@@ -148,7 +207,7 @@ export function Trends() {
                         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                             <h3 className="text-gray-400 font-medium mb-3 text-sm">Role Changes (latest vs previous)</h3>
                             <div className="space-y-2">
-                                {Object.entries(comparison.changes.roles).map(([r, change]) => (
+                                {Object.entries(activeComparison.changes.roles).map(([r, change]) => (
                                     <DemographicChangeCard
                                         key={r}
                                         label={r}
@@ -162,13 +221,43 @@ export function Trends() {
 
                     {/* ── Trend Charts ── */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <ConsultantsTrendChart data={comparison.semesters} />
-                        <ProjectsTrendChart data={comparison.semesters} />
+                        <ConsultantsTrendChart data={activeComparison.semesters} />
+                        <ProjectsTrendChart data={activeComparison.semesters} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <GenderTrendChart data={comparison.semesters} />
-                        <RoleTrendChart data={comparison.semesters} />
+                        <GenderTrendChart data={activeComparison.semesters} />
+                        <RoleTrendChart data={activeComparison.semesters} />
                     </div>
+
+                    {/* ── Promotions, Drops & Deferrals (mock mode only) ── */}
+                    {mockMode && (
+                        <>
+                            {/* Charts */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {mockPromotions?.promotions && (
+                                    <PromotionsChart promotions={mockPromotions.promotions} />
+                                )}
+                                {mockDrops?.drops && (
+                                    <DropsChart drops={mockDrops.drops} />
+                                )}
+                                {mockDeferrals?.deferrals && (
+                                    <DeferralsChart deferrals={mockDeferrals.deferrals} />
+                                )}
+                            </div>
+                            {/* Tables */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {mockPromotions?.promotions && (
+                                    <PromotionsTable promotions={mockPromotions.promotions} />
+                                )}
+                                {mockDrops?.drops && (
+                                    <DropsTable drops={mockDrops.drops} />
+                                )}
+                                {mockDeferrals?.deferrals && (
+                                    <DeferralsTable deferrals={mockDeferrals.deferrals} />
+                                )}
+                            </div>
+                        </>
+                    )}
                 </>
             )}
         </div>
