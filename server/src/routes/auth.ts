@@ -20,7 +20,6 @@ const msalConfig = {
 const cca = new ConfidentialClientApplication(msalConfig);
 const redirectUri = process.env.REDIRECT_URI!;
 
-// Redirect to Microsoft login
 router.get('/login', (req, res) => {
   const authCodeUrlParameters = {
     scopes: ['openid', 'profile', 'email'],
@@ -35,7 +34,6 @@ router.get('/login', (req, res) => {
     });
 });
 
-// Handle redirect from Microsoft
 router.get('/redirect', async (req, res) => {
   const tokenRequest = {
     code: req.query.code as string,
@@ -50,24 +48,30 @@ router.get('/redirect', async (req, res) => {
     }
 
     const email = response.account.username;
+    console.log('SSO email:', email);
 
-    // Check if this email belongs to a registered IBC member
-    const result = await pool.query(`
-      SELECT u.email, u.name
-      FROM users u
-      INNER JOIN consultants c ON u.user_id = c.user_id
-      WHERE LOWER(TRIM(u.email)) = LOWER(TRIM($1))
-    `, [email]);
+    const result = await pool.query(
+      'SELECT email, name, curr_role FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))',
+      [email]
+    );
+
+    console.log('DB result:', result.rows);
 
     if (result.rows.length === 0) {
       return res.redirect('http://localhost:5500/platform/login.html?error=unauthorized');
     }
 
     const appToken = jwt.sign(
-      { email: result.rows[0].email, name: result.rows[0].name },
+      {
+        email: result.rows[0].email,
+        name: result.rows[0].name,
+        role: result.rows[0].curr_role,
+      },
       process.env.JWT_SECRET!,
       { expiresIn: '8h' }
     );
+
+    console.log('JWT role:', result.rows[0].curr_role);
 
     res.redirect(`http://localhost:5500/platform/index.html?token=${appToken}`);
   } catch (err) {

@@ -6,7 +6,6 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
       --navy: #0f1f3d;
       --gold: #c9a84c;
@@ -14,7 +13,6 @@
       --cream: #f8f5ef;
       --muted: #8a94a8;
     }
-
     body {
       font-family: 'DM Sans', sans-serif;
       background: var(--navy);
@@ -25,7 +23,6 @@
       overflow: hidden;
       position: relative;
     }
-
     body::before {
       content: '';
       position: fixed;
@@ -36,7 +33,6 @@
       background-size: 60px 60px;
       pointer-events: none;
     }
-
     body::after {
       content: '';
       position: fixed;
@@ -48,7 +44,6 @@
       transform: translate(-50%, -50%);
       pointer-events: none;
     }
-
     .card {
       position: relative;
       z-index: 1;
@@ -60,25 +55,21 @@
       backdrop-filter: blur(12px);
       animation: fadeUp 0.6s ease both;
     }
-
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(24px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-
     .top-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 44px;
     }
-
     .logo-mark {
       display: flex;
       align-items: center;
       gap: 10px;
     }
-
     .logo-icon {
       width: 32px;
       height: 32px;
@@ -92,13 +83,11 @@
       color: var(--navy);
       font-weight: 600;
     }
-
     .logo-text {
       font-family: 'Playfair Display', serif;
       font-size: 16px;
       color: var(--cream);
     }
-
     .logout-btn {
       font-family: 'DM Sans', sans-serif;
       font-size: 12px;
@@ -110,9 +99,7 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-
     .logout-btn:hover { color: var(--cream); border-color: rgba(255,255,255,0.25); }
-
     .welcome-label {
       font-size: 12px;
       color: var(--gold);
@@ -121,27 +108,23 @@
       font-weight: 500;
       margin-bottom: 6px;
     }
-
     h1 {
       font-family: 'Playfair Display', serif;
       font-size: 26px;
       color: var(--cream);
       font-weight: 600;
     }
-
     .divider {
       width: 40px;
       height: 2px;
       background: var(--gold);
       margin: 24px 0;
     }
-
     .nav-grid {
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
-
     .nav-btn {
       display: flex;
       align-items: center;
@@ -158,8 +141,8 @@
       transition: all 0.2s ease;
       position: relative;
       overflow: hidden;
+      cursor: pointer;
     }
-
     .nav-btn::before {
       content: '';
       position: absolute;
@@ -168,19 +151,15 @@
       opacity: 0;
       transition: opacity 0.2s;
     }
-
     .nav-btn:hover { border-color: rgba(201,168,76,0.5); color: var(--gold-light); }
     .nav-btn:hover::before { opacity: 1; }
     .nav-btn:hover .arrow { transform: translateX(4px); }
-
     .arrow {
       font-size: 18px;
       color: var(--gold);
       transition: transform 0.2s ease;
     }
-
     .nav-btn-content { display: flex; flex-direction: column; }
-
     .nav-btn-label {
       font-size: 11px;
       color: var(--muted);
@@ -198,11 +177,9 @@
       </div>
       <button class="logout-btn" id="logoutBtn">Sign out</button>
     </div>
-
     <div class="welcome-label">Welcome back</div>
     <h1 id="userName">Member</h1>
     <div class="divider"></div>
-
     <nav class="nav-grid">
       <a class="nav-btn" href="LINK HERE" target="_blank">
         <div class="nav-btn-content">
@@ -211,7 +188,6 @@
         </div>
         <span class="arrow">→</span>
       </a>
-
       <a class="nav-btn" href="https://paul-frontend-1028092455458.us-central1.run.app" target="_blank">
         <div class="nav-btn-content">
           <span>Paul Dashboard</span>
@@ -219,8 +195,7 @@
         </div>
         <span class="arrow">→</span>
       </a>
-
-      <a class="nav-btn" href="http://34.58.210.236:3000/" target="_blank">
+      <a class="nav-btn" id="staffingBtn" href="http://34.58.210.236:3000/" target="_blank">
         <div class="nav-btn-content">
           <span>Staffing Tool</span>
           <span class="nav-btn-label">Team & project staffing</span>
@@ -229,7 +204,6 @@
       </a>
     </nav>
   </div>
-
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get('token');
@@ -246,14 +220,24 @@
     } else {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('JWT payload:', payload);
+
         if (payload.exp && Date.now() / 1000 > payload.exp) {
           localStorage.removeItem('ibc_jwt');
           window.location.href = 'login.html';
         }
+
         const display = payload.name || payload.email || 'Member';
-        // Name from Azure is "LastName, FirstName" — extract first name
         document.getElementById('userName').textContent =
           display.includes(',') ? display.split(',')[1].trim() : display.split(' ')[0];
+
+        if (!['SD', 'SM'].includes(payload.role)) {
+          document.getElementById('staffingBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Access denied. This tool is only available to Senior Directors and Senior Managers.');
+          });
+        }
+
       } catch (e) {
         localStorage.removeItem('ibc_jwt');
         window.location.href = 'login.html';

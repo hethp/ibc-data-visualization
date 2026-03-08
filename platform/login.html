@@ -6,7 +6,6 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
       --navy: #0f1f3d;
       --gold: #c9a84c;
@@ -14,7 +13,6 @@
       --cream: #f8f5ef;
       --muted: #8a94a8;
     }
-
     body {
       font-family: 'DM Sans', sans-serif;
       background: var(--navy);
@@ -25,7 +23,6 @@
       overflow: hidden;
       position: relative;
     }
-
     body::before {
       content: '';
       position: fixed;
@@ -36,7 +33,6 @@
       background-size: 60px 60px;
       pointer-events: none;
     }
-
     body::after {
       content: '';
       position: fixed;
@@ -48,7 +44,6 @@
       transform: translate(-50%, -50%);
       pointer-events: none;
     }
-
     .card {
       position: relative;
       z-index: 1;
@@ -60,19 +55,16 @@
       backdrop-filter: blur(12px);
       animation: fadeUp 0.6s ease both;
     }
-
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(24px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-
     .logo-mark {
       display: flex;
       align-items: center;
       gap: 12px;
       margin-bottom: 40px;
     }
-
     .logo-icon {
       width: 36px;
       height: 36px;
@@ -86,14 +78,12 @@
       color: var(--navy);
       font-weight: 600;
     }
-
     .logo-text {
       font-family: 'Playfair Display', serif;
       font-size: 20px;
       color: var(--cream);
       letter-spacing: 0.02em;
     }
-
     h1 {
       font-family: 'Playfair Display', serif;
       font-size: 28px;
@@ -102,21 +92,18 @@
       line-height: 1.2;
       margin-bottom: 10px;
     }
-
     .subtitle {
       font-size: 14px;
       color: var(--muted);
       line-height: 1.6;
       margin-bottom: 40px;
     }
-
     .divider {
       width: 40px;
       height: 2px;
       background: var(--gold);
       margin-bottom: 40px;
     }
-
     .sso-btn {
       width: 100%;
       padding: 16px 20px;
@@ -136,7 +123,6 @@
       position: relative;
       overflow: hidden;
     }
-
     .sso-btn::before {
       content: '';
       position: absolute;
@@ -145,11 +131,9 @@
       opacity: 0;
       transition: opacity 0.2s;
     }
-
     .sso-btn:hover { border-color: var(--gold); color: var(--gold-light); }
     .sso-btn:hover::before { opacity: 1; }
     .sso-btn:active { transform: scale(0.99); }
-
     .ms-icon {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -158,13 +142,11 @@
       height: 18px;
       flex-shrink: 0;
     }
-
     .ms-icon span { display: block; border-radius: 1px; }
     .ms-icon span:nth-child(1) { background: #f25022; }
     .ms-icon span:nth-child(2) { background: #7fba00; }
     .ms-icon span:nth-child(3) { background: #00a4ef; }
     .ms-icon span:nth-child(4) { background: #ffb900; }
-
     .footer-note {
       margin-top: 28px;
       font-size: 12px;
@@ -180,35 +162,29 @@
       <div class="logo-icon">IBC</div>
       <span class="logo-text">Illinois Business Consulting</span>
     </div>
-
     <h1>Member Portal</h1>
     <div class="divider"></div>
     <p class="subtitle">Sign in with your UIUC Microsoft account to access the portal.</p>
-
     <button class="sso-btn" id="msLoginBtn">
       <div class="ms-icon">
         <span></span><span></span><span></span><span></span>
       </div>
       Continue with UIUC Microsoft
     </button>
-
     <p class="footer-note">
       Only authorized IBC members can access this portal.<br>
       Contact your admin if you need access.
     </p>
   </div>
-
   <script>
-    if (localStorage.getItem('ibc_jwt')) {
-      window.location.href = 'index.html';
+    localStorage.removeItem('ibc_jwt');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'unauthorized') {
+      const note = document.querySelector('.footer-note');
+      note.innerHTML = '⚠️ Your account is not registered with IBC.<br>Contact your admin for access.';
+      note.style.color = '#e57373';
     }
-    // Show error if redirected back as unauthorized
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('error') === 'unauthorized') {
-  const note = document.querySelector('.footer-note');
-  note.innerHTML = '⚠️ Your account is not registered with IBC.<br>Contact your admin for access.';
-  note.style.color = '#e57373';
-}
 
     document.getElementById('msLoginBtn').addEventListener('click', () => {
       window.location.href = 'http://localhost:3000/auth/login';
