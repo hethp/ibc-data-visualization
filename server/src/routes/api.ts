@@ -419,12 +419,39 @@ router.get('/stats/compare', async (req, res) => {
                 roleDistribution[row.role] = parseInt(row.count);
             });
 
+            // Demographic (year in school) distribution
+            const normalizeYear = (raw: string): string => {
+                const v = (raw || '').trim();
+                if (v === 'Freshman') return 'Freshman';
+                if (v === 'Sophomore') return 'Sophomore';
+                if (v === 'Junior') return 'Junior';
+                if (v === 'Senior') return 'Senior';
+                if (/master/i.test(v)) return "Master's";
+                return 'Unknown';
+            };
+
+            const demoRes = await pool.query(`
+                SELECT COALESCE(c.year, 'Unknown') as year, COUNT(DISTINCT u.user_id) as count
+                FROM users u
+                JOIN consultant_projects cp ON u.user_id = cp.user_id
+                JOIN projects p ON cp.project_id = p.project_id
+                LEFT JOIN consultants c ON u.user_id = c.user_id
+                WHERE p.project_semester = $1
+                GROUP BY COALESCE(c.year, 'Unknown')
+            `, params);
+            const demographicDistribution: Record<string, number> = {};
+            demoRes.rows.forEach(row => {
+                const label = normalizeYear(row.year);
+                demographicDistribution[label] = (demographicDistribution[label] || 0) + parseInt(row.count);
+            });
+
             return {
                 semesterId: semId,
                 totalProjects: parseInt(totalProjectsRes.rows[0].count),
                 totalConsultants: parseInt(totalConsultantsRes.rows[0].count),
                 genderDistribution,
                 roleDistribution,
+                demographicDistribution,
             };
         }
 
@@ -493,6 +520,7 @@ router.get('/mock/stats/compare', (req, res) => {
             totalConsultants: 38,
             genderDistribution: { Male: 20, Female: 16, Other: 2 },
             roleDistribution: { NC: 12, EC: 10, SC: 8, PM: 5, SM: 3 },
+            demographicDistribution: { Freshman: 8, Sophomore: 12, Junior: 10, Senior: 6, "Master's": 2 },
         },
         {
             semesterId: 'F24',
@@ -500,6 +528,7 @@ router.get('/mock/stats/compare', (req, res) => {
             totalConsultants: 44,
             genderDistribution: { Male: 22, Female: 19, Other: 3 },
             roleDistribution: { NC: 10, EC: 12, SC: 10, PM: 7, SM: 5 },
+            demographicDistribution: { Freshman: 6, Sophomore: 14, Junior: 12, Senior: 8, "Master's": 4 },
         },
         {
             semesterId: 'S25',
@@ -507,6 +536,7 @@ router.get('/mock/stats/compare', (req, res) => {
             totalConsultants: 52,
             genderDistribution: { Male: 26, Female: 22, Other: 4 },
             roleDistribution: { NC: 14, EC: 13, SC: 11, PM: 8, SM: 6 },
+            demographicDistribution: { Freshman: 10, Sophomore: 15, Junior: 13, Senior: 10, "Master's": 4 },
         },
     ];
 

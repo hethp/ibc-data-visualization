@@ -12,7 +12,7 @@ export function Dashboard() {
     const rawProjects = searchParams.get('projects') || searchParams.get('project') || '';
     const selectedProjects = [...new Set(rawProjects.split(',').filter(Boolean))];
 
-    const { data: stats, isLoading } = useDashboardStats(
+    const { data: stats, isLoading, isFetching } = useDashboardStats(
         semesterId,
         selectedProjects.length > 0 ? selectedProjects : undefined
     );
@@ -68,6 +68,11 @@ export function Dashboard() {
                 </div>
             ) : stats ? (
                 <>
+                    {/* Refetch indicator */}
+                    {isFetching && !isLoading && (
+                        <div className="text-indigo-400 text-sm animate-pulse">Updating…</div>
+                    )}
+
                     {/* Filter indicator */}
                     {filterLabel && (
                         <div className="flex items-center gap-2 text-sm">
@@ -86,14 +91,14 @@ export function Dashboard() {
                     )}
 
                     {/* KPI Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 transition-opacity duration-200 ${isFetching && !isLoading ? 'opacity-50' : ''}`}>
                         <KpiCard title="Total Consultants" value={stats.totalConsultants} icon={Users} color="indigo" />
                         <KpiCard title="Active Consultants" value={stats.activeConsultants} icon={UserCheck} color="emerald" />
                         <KpiCard title="Total Projects" value={stats.totalProjects} icon={Briefcase} color="purple" />
                     </div>
 
                     {/* Charts Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 transition-opacity duration-200 ${isFetching && !isLoading ? 'opacity-50' : ''}`}>
                         <RoleDistributionChart data={stats.roleDistribution} />
                         <GenderChart data={stats.genderDistribution} />
                         <DemographicChart data={stats.demographicChart} />

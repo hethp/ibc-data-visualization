@@ -15,6 +15,7 @@ import {
     ProjectsTrendChart,
     GenderTrendChart,
     RoleTrendChart,
+    GradeTrendChart,
 } from '../components/trends/TrendCharts';
 import {
     MockDataBanner,
@@ -227,6 +228,9 @@ export function Trends() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <GenderTrendChart data={activeComparison.semesters} />
                         <RoleTrendChart data={activeComparison.semesters} />
+                    </div>
+                    <div className="grid grid-cols-1 gap-6">
+                        <GradeTrendChart data={activeComparison.semesters} />
                     </div>
 
                     {/* ── Promotions, Drops & Deferrals (mock mode only) ── */}

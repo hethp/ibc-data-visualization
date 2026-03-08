@@ -25,25 +25,30 @@ export function FilterBar() {
     };
 
     const handleProjectsChange = (values: string[]) => {
-        // if user selects our 'all' placeholder, clear everything
+        const newParams = new URLSearchParams(searchParams);
+
+        // If user clicked "All Projects", clear filter → shows everything
         if (values.includes('__all')) {
-            const newParams = new URLSearchParams(searchParams);
             newParams.delete('projects');
             newParams.delete('project');
             setSearchParams(newParams);
             return;
         }
 
-        const newParams = new URLSearchParams(searchParams);
         if (values.length > 0) {
             newParams.set('projects', values.join(','));
             newParams.delete('project');
         } else {
+            // No projects selected → show ALL data for semester
             newParams.delete('projects');
             newParams.delete('project');
         }
         setSearchParams(newParams);
     };
+
+    // For display: when nothing is filtered, show "All Projects" as a visual hint
+    // When specific projects are selected, show those
+    const displayValue = selectedProjectIds.length > 0 ? selectedProjectIds : [];
 
     return (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-wrap gap-4 items-center">
@@ -64,14 +69,19 @@ export function FilterBar() {
             </div>
 
             <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-500 font-medium uppercase tracking-wider">Projects (Optional)</label>
+                <label className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                    Projects
+                    {selectedProjectIds.length === 0 && currentSemester && (
+                        <span className="text-indigo-400 ml-1">(All)</span>
+                    )}
+                </label>
                 <Select
                     mode="multiple"
                     className="w-80"
                     placeholder="All Projects"
                     allowClear
                     loading={loadingProjects}
-                    value={selectedProjectIds}
+                    value={displayValue}
                     onChange={handleProjectsChange}
                     disabled={!currentSemester}
                     maxTagCount={2}
@@ -79,7 +89,7 @@ export function FilterBar() {
                     popupClassName="bg-gray-800 text-white"
                 >
                     <Option key="__all" value="__all" className="font-semibold">
-                        All Projects
+                        ✓ All Projects
                     </Option>
                     {projects?.map((proj) => (
                         <Option key={proj.id} value={proj.id}>{proj.name}</Option>
@@ -89,3 +99,4 @@ export function FilterBar() {
         </div>
     );
 }
+

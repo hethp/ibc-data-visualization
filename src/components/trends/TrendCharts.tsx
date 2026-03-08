@@ -135,10 +135,11 @@ const ROLE_COLORS: Record<string, string> = {
     SC: '#8F32B8',
     PM: '#811CAD',
     SM: '#7306A2',
+    SD: '#fbbf24',
 };
 
 export function RoleTrendChart({ data }: { data: SemesterStats[] }) {
-    const allowedRoles = ['NC', 'EC', 'SC', 'PM', 'SM'];
+    const allowedRoles = ['NC', 'EC', 'SC', 'PM', 'SM', 'SD'];
 
     const chartData = data.map(s => {
         const row: Record<string, string | number> = { semester: s.semesterId };
@@ -163,6 +164,57 @@ export function RoleTrendChart({ data }: { data: SemesterStats[] }) {
                             fill={ROLE_COLORS[r] || '#6b7280'}
                             radius={[4, 4, 0, 0]}
                             barSize={20}
+                        />
+                    ))}
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
+/* ──────────────────────────────────────
+   5. Grouped bar chart — Grade (Year in School) Distribution
+   ────────────────────────────────────── */
+const GRADE_COLORS: Record<string, string> = {
+    Freshman: '#a855f7',
+    Sophomore: '#f59e0b',
+    Junior: '#3b82f6',
+    Senior: '#e1e33f',
+    "Master's": '#7306A2',
+    Unknown: '#6b7280',
+};
+
+export function GradeTrendChart({ data }: { data: SemesterStats[] }) {
+    const gradeOrder = ['Freshman', 'Sophomore', 'Junior', 'Senior', "Master's"];
+
+    // Only show grades that appear in at least one semester
+    const gradesPresent = gradeOrder.filter(g =>
+        data.some(s => (s.demographicDistribution?.[g] ?? 0) > 0)
+    );
+
+    const chartData = data.map(s => {
+        const row: Record<string, string | number> = { semester: s.semesterId };
+        gradesPresent.forEach(g => { row[g] = s.demographicDistribution?.[g] || 0; });
+        return row;
+    });
+
+    return (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <h3 className="text-gray-400 font-medium mb-4 text-sm">Grade Distribution by Semester</h3>
+            <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="semester" stroke="#6b7280" fontSize={12} />
+                    <YAxis stroke="#6b7280" fontSize={12} />
+                    <Tooltip {...tooltipStyle} />
+                    <Legend />
+                    {gradesPresent.map(g => (
+                        <Bar
+                            key={g}
+                            dataKey={g}
+                            fill={GRADE_COLORS[g] || '#6b7280'}
+                            radius={[4, 4, 0, 0]}
+                            barSize={24}
                         />
                     ))}
                 </BarChart>

@@ -63,6 +63,7 @@ export interface SemesterStats {
     totalConsultants: number;
     genderDistribution: Record<string, number>;
     roleDistribution: Record<string, number>;
+    demographicDistribution: Record<string, number>; // yearInSchool → count
 }
 
 export interface ChangeMetric {
