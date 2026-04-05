@@ -203,7 +203,8 @@ router.get('/stats', async (req, res) => {
             }
         }
         const whereSQL = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-        const hasFilters = clauses.length > 0;
+        const hasProjectFilters = projectIdsString !== undefined && projectIdsString.length > 0;
+        const hasSemesterFilter = semesterId !== undefined;
 
         // Project Staffing
         const staffingRes = await pool.query(`
@@ -234,7 +235,7 @@ router.get('/stats', async (req, res) => {
         let demographicQuery: string;
         let demographicParams: any[];
 
-        if (hasFilters) {
+        if (hasProjectFilters) {
             // Only users on the selected projects
             demographicQuery = `
                 SELECT COALESCE(c.year, 'Unknown') as year, COUNT(DISTINCT u.user_id) as count
@@ -246,7 +247,7 @@ router.get('/stats', async (req, res) => {
                 GROUP BY COALESCE(c.year, 'Unknown')
             `;
             demographicParams = params;
-        } else if (semesterId) {
+        } else if (hasSemesterFilter) {
             // All semester users: assigned + unassigned (NCs etc.) — same UNION as gender
             demographicQuery = `
                 SELECT COALESCE(c.year, 'Unknown') as year, COUNT(DISTINCT u.user_id) as count
@@ -300,7 +301,7 @@ router.get('/stats', async (req, res) => {
         let majorQuery: string;
         let majorParams: any[];
 
-        if (hasFilters) {
+        if (hasProjectFilters) {
             // Projects selected - get users only from those projects
             majorQuery = `
                 SELECT COALESCE(c.major, 'Unknown') as major, COUNT(DISTINCT u.user_id) as count
@@ -361,7 +362,7 @@ router.get('/stats', async (req, res) => {
         let collegeQuery: string;
         let collegeParams: any[];
 
-        if (hasFilters) {
+        if (hasProjectFilters) {
             // Projects selected - get users only from those projects
             collegeQuery = `
                 SELECT COALESCE(c.college, 'Unknown') as college, COUNT(DISTINCT u.user_id) as count
@@ -373,7 +374,7 @@ router.get('/stats', async (req, res) => {
                 GROUP BY c.college
             `;
             collegeParams = params;
-        } else if (semesterId) {
+        } else if (hasSemesterFilter) {
             // Semester selected but no specific projects - get all semester users (assigned + unassigned)
             collegeQuery = `
                 SELECT COALESCE(c.college, 'Unknown') as college, COUNT(DISTINCT u.user_id) as count
@@ -473,7 +474,7 @@ router.get('/stats', async (req, res) => {
         let genderQuery: string;
         let genderParams: any[];
 
-        if (hasFilters) {
+        if (hasProjectFilters) {
             // Only users on the selected projects
             genderQuery = `
                 SELECT COALESCE(u.gender, c.gender, 'Unknown') as gender, COUNT(DISTINCT u.user_id) as count
@@ -485,7 +486,7 @@ router.get('/stats', async (req, res) => {
                 GROUP BY COALESCE(u.gender, c.gender, 'Unknown')
             `;
             genderParams = params;
-        } else if (semesterId) {
+        } else if (hasSemesterFilter) {
             // All semester users: assigned + unassigned (NCs etc.)
             genderQuery = `
                 SELECT COALESCE(u.gender, c.gender, 'Unknown') as gender, COUNT(DISTINCT u.user_id) as count
