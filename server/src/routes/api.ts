@@ -203,7 +203,7 @@ router.get('/stats', async (req, res) => {
             }
         }
         const whereSQL = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-        const hasProjectFilter = !!(projectIdsString && projectIdsString.length > 0);
+        const hasFilters = clauses.length > 0;
 
         // Project Staffing
         const staffingRes = await pool.query(`
@@ -234,7 +234,7 @@ router.get('/stats', async (req, res) => {
         let demographicQuery: string;
         let demographicParams: any[];
 
-        if (hasProjectFilter) {
+        if (hasFilters) {
             // Only users on the selected projects
             demographicQuery = `
                 SELECT COALESCE(c.year, 'Unknown') as year, COUNT(DISTINCT u.user_id) as count
@@ -287,18 +287,68 @@ router.get('/stats', async (req, res) => {
             const label = normalizeYear(row.year);
             demographicChart[label] = (demographicChart[label] || 0) + parseInt(row.count);
         });
-        // Remove zero-count buckets so chart only shows years that exist in data
-        Object.keys(demographicChart).forEach(k => {
-            if (demographicChart[k] === 0) delete demographicChart[k];
+        
+        // Ensure all year levels are present, even with 0 count
+        const yearLevels = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Master\'s'];
+        yearLevels.forEach(year => {
+            if (!(year in demographicChart)) {
+                demographicChart[year] = 0;
+            }
         });
 
-        // Major Distribution - pull from users joined with consultants
-        const majorRes = await pool.query(`
-            SELECT COALESCE(c.major, 'Unknown') as major, COUNT(DISTINCT u.user_id) as count
-            FROM users u
-            JOIN consultants c ON u.user_id = c.user_id
-            GROUP BY c.major
-        `);
+        // Major Distribution - pull from users joined with consultants, filtered by semester/projects
+        let majorQuery: string;
+        let majorParams: any[];
+
+        if (hasFilters) {
+            // Projects selected - get users only from those projects
+            majorQuery = `
+                SELECT COALESCE(c.major, 'Unknown') as major, COUNT(DISTINCT u.user_id) as count
+                FROM users u
+                JOIN consultants c ON u.user_id = c.user_id
+                JOIN consultant_projects cp ON u.user_id = cp.user_id
+                JOIN projects p ON cp.project_id = p.project_id
+                ${whereSQL}
+                GROUP BY c.major
+            `;
+            majorParams = params;
+        } else if (semesterId) {
+            // Semester selected but no specific projects - get all semester users (assigned + unassigned)
+            majorQuery = `
+                SELECT COALESCE(c.major, 'Unknown') as major, COUNT(DISTINCT u.user_id) as count
+                FROM users u
+                JOIN consultants c ON u.user_id = c.user_id
+                WHERE u.user_id IN (
+                    SELECT DISTINCT u2.user_id
+                    FROM users u2
+                    JOIN consultant_projects cp ON u2.user_id = cp.user_id
+                    JOIN projects p ON cp.project_id = p.project_id
+                    WHERE p.project_semester = $1
+                    UNION
+                    SELECT u3.user_id
+                    FROM users u3
+                    WHERE u3.curr_role IN ('NC','EC','SC','PM','SM','SD')
+                    AND u3.user_id NOT IN (
+                        SELECT cp2.user_id FROM consultant_projects cp2
+                        JOIN projects p2 ON cp2.project_id = p2.project_id
+                        WHERE p2.project_semester = $1
+                    )
+                )
+                GROUP BY c.major
+            `;
+            majorParams = [semesterId];
+        } else {
+            // No filters - get all users
+            majorQuery = `
+                SELECT COALESCE(c.major, 'Unknown') as major, COUNT(DISTINCT u.user_id) as count
+                FROM users u
+                JOIN consultants c ON u.user_id = c.user_id
+                GROUP BY c.major
+            `;
+            majorParams = [];
+        }
+
+        const majorRes = await pool.query(majorQuery, majorParams);
 
         const majorDistribution: Record<string, number> = {};
         majorRes.rows.forEach(row => {
@@ -307,13 +357,59 @@ router.get('/stats', async (req, res) => {
             majorDistribution[category] = (majorDistribution[category] || 0) + parseInt(row.count);
         });
 
-        // College Distribution - pull from users joined with consultants
-        const collegeRes = await pool.query(`
-            SELECT COALESCE(c.college, 'Unknown') as college, COUNT(DISTINCT u.user_id) as count
-            FROM users u
-            JOIN consultants c ON u.user_id = c.user_id
-            GROUP BY c.college
-        `);
+        // College Distribution - pull from users joined with consultants, filtered by semester/projects
+        let collegeQuery: string;
+        let collegeParams: any[];
+
+        if (hasFilters) {
+            // Projects selected - get users only from those projects
+            collegeQuery = `
+                SELECT COALESCE(c.college, 'Unknown') as college, COUNT(DISTINCT u.user_id) as count
+                FROM users u
+                JOIN consultants c ON u.user_id = c.user_id
+                JOIN consultant_projects cp ON u.user_id = cp.user_id
+                JOIN projects p ON cp.project_id = p.project_id
+                ${whereSQL}
+                GROUP BY c.college
+            `;
+            collegeParams = params;
+        } else if (semesterId) {
+            // Semester selected but no specific projects - get all semester users (assigned + unassigned)
+            collegeQuery = `
+                SELECT COALESCE(c.college, 'Unknown') as college, COUNT(DISTINCT u.user_id) as count
+                FROM users u
+                JOIN consultants c ON u.user_id = c.user_id
+                WHERE u.user_id IN (
+                    SELECT DISTINCT u2.user_id
+                    FROM users u2
+                    JOIN consultant_projects cp ON u2.user_id = cp.user_id
+                    JOIN projects p ON cp.project_id = p.project_id
+                    WHERE p.project_semester = $1
+                    UNION
+                    SELECT u3.user_id
+                    FROM users u3
+                    WHERE u3.curr_role IN ('NC','EC','SC','PM','SM','SD')
+                    AND u3.user_id NOT IN (
+                        SELECT cp2.user_id FROM consultant_projects cp2
+                        JOIN projects p2 ON cp2.project_id = p2.project_id
+                        WHERE p2.project_semester = $1
+                    )
+                )
+                GROUP BY c.college
+            `;
+            collegeParams = [semesterId];
+        } else {
+            // No filters - get all users
+            collegeQuery = `
+                SELECT COALESCE(c.college, 'Unknown') as college, COUNT(DISTINCT u.user_id) as count
+                FROM users u
+                JOIN consultants c ON u.user_id = c.user_id
+                GROUP BY c.college
+            `;
+            collegeParams = [];
+        }
+
+        const collegeRes = await pool.query(collegeQuery, collegeParams);
 
         const collegeDistribution: Record<string, number> = {};
         collegeRes.rows.forEach(row => {
@@ -377,7 +473,7 @@ router.get('/stats', async (req, res) => {
         let genderQuery: string;
         let genderParams: any[];
 
-        if (hasProjectFilter) {
+        if (hasFilters) {
             // Only users on the selected projects
             genderQuery = `
                 SELECT COALESCE(u.gender, c.gender, 'Unknown') as gender, COUNT(DISTINCT u.user_id) as count

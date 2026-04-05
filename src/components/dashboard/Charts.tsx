@@ -263,13 +263,12 @@ export function ProjectStaffingChart({ data, onBarClick, selectedProjects = [], 
 
 export function DemographicChart({ data }: { data: DashboardStats['demographicChart'] }) {
     const yearOrder = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Master\'s'];
-    const chartData = yearOrder
-        .filter((y) => data[y] !== undefined)
-        .map((y) => ({ name: y, value: data[y] }));
+    const chartData = yearOrder.map((y) => ({ name: y, value: data[y] || 0 }));
     const total = chartData.reduce((sum, entry) => sum + entry.value, 0);
 
     return (
         <div className="h-80 w-full bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <h3 className="text-gray-400 font-medium mb-4">Year Distribution</h3>
             <ResponsiveContainer width="100%" height="85%">
                 <BarChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                     <XAxis dataKey="name" stroke="#6b7280" fontSize={11} tick={{ fill: '#d1d5db' }} />
