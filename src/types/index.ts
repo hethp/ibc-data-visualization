@@ -8,6 +8,7 @@ export interface Consultant {
     currentRole?: Role;
     yearInSchool?: string; // maps to consultants.year
     major?: string;        // maps to consultants.major
+    college?: string;      // maps to consultants.college
     joinedSemester?: string;
     graduatedSemester?: string;
 }
@@ -46,6 +47,10 @@ export interface DashboardStats {
     roleDistribution: Record<Role, number>;
     projectStaffing: Record<string, number>; // projectId -> count
     demographicChart: Record<string, number>; // yearInSchool -> count
+    majorDistribution?: Record<string, number>;  // major -> count
+    collegeDistribution?: Record<string, number>;  // college -> count
+    drops?: Drop[];  // Data source: consultants table with status='inactive' + separation_reason (future)
+    dropsBreakdown?: { fired: number; resigned: number };  // Counts by reason
 }
 
 export interface ProjectStats {
@@ -97,6 +102,8 @@ export interface Drop {
     name: string;
     lastRole: string;
     lastSemester: string;
+    reason: 'fired' | 'resigned'; // Data source: consultants.status or separation_reason (future DB column)
+    resignationReason?: string; // e.g., "Better opportunity", "Graduation", "Personal reasons", "Relocation"
 }
 
 export interface Deferral {

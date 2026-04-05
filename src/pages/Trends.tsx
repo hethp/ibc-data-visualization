@@ -6,7 +6,6 @@ import {
     useSemesterComparison,
     useMockComparison,
     useMockPromotions,
-    useMockDrops,
     useMockDeferrals,
 } from '../hooks/useDashboardData';
 import { TrendCard, DemographicChangeCard } from '../components/trends/TrendCards';
@@ -25,6 +24,7 @@ import {
     PromotionsTable,
     DropsTable,
     DeferralsTable,
+    ResignedTable,
 } from '../components/trends/PromotionsDropsCards';
 
 const MOCK_SEMESTERS = [
@@ -48,6 +48,13 @@ const ROLE_COLORS: Record<string, string> = {
     SM: '#7306A2',
 };
 
+const MOCK_DROPS_DATA = [
+    { name: 'John Smith', lastRole: 'PL', lastSemester: 'S25', reason: 'resigned' as const, resignationReason: 'Better opportunity' },
+    { name: 'Jane Doe', lastRole: 'Sr', lastSemester: 'S25', reason: 'fired' as const, resignationReason: undefined },
+    { name: 'Bob Brown', lastRole: 'A', lastSemester: 'F24', reason: 'resigned' as const, resignationReason: 'Personal reasons' },
+    { name: 'Sarah Wilson', lastRole: 'Pc', lastSemester: 'F24', reason: 'resigned' as const, resignationReason: 'Relocation' },
+];
+
 export function Trends() {
     const { data: semesters, isLoading: loadingSemesters } = useSemesters();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -61,7 +68,8 @@ export function Trends() {
     // Mock data hooks — pass selected semester IDs so data is filtered
     const { data: mockComparison, isLoading: loadingMock } = useMockComparison(selectedIds, mockMode);
     const { data: mockPromotions } = useMockPromotions(selectedIds, mockMode);
-    const { data: mockDrops } = useMockDrops(selectedIds, mockMode);
+    // Use hardcoded mock drops data for now (backend doesn't have /mock/drops endpoint)
+    const mockDrops = mockMode ? { drops: MOCK_DROPS_DATA, _mockData: true } : null;
     const { data: mockDeferrals } = useMockDeferrals(selectedIds, mockMode);
 
     // Use mock or real data depending on toggle
@@ -249,12 +257,20 @@ export function Trends() {
                                 )}
                             </div>
                             {/* Tables */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* Tables - Promotions & Drops first */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {mockPromotions?.promotions && (
                                     <PromotionsTable promotions={mockPromotions.promotions} />
                                 )}
                                 {mockDrops?.drops && (
                                     <DropsTable drops={mockDrops.drops} />
+                                )}
+                            </div>
+
+                            {/* Tables - Resignations & Deferrals */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {mockDrops?.drops && (
+                                    <ResignedTable drops={mockDrops.drops} />
                                 )}
                                 {mockDeferrals?.deferrals && (
                                     <DeferralsTable deferrals={mockDeferrals.deferrals} />

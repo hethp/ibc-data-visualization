@@ -82,7 +82,35 @@ export const mockApi = {
                               'Team Lead': 0,
                           },
                     projectStaffing,
-                    demographicChart: { 'Freshman': 8, 'Sophomore': 12, 'Junior': 10, 'Senior': 7, 'Master\'s': 4 }
+                    demographicChart: { 'Freshman': 8, 'Sophomore': 12, 'Junior': 10, 'Senior': 7, 'Master\'s': 4 },
+                    majorDistribution: {
+                        'Computer Science': 18,
+                        'Engineering': 12,
+                        'Business': 10,
+                        'Economics': 3,
+                        'Other': 2,
+                    },
+                    collegeDistribution: {
+                        'Grainger Engineering': 12,
+                        'Gies Business': 10,
+                        'Liberal Arts & Sciences': 10,
+                        'Engineering': 8,
+                        'Agriculture & Consumer': 2,
+                        'Applied Health Sciences': 1,
+                        'Education': 1,
+                        'Fine & Applied Arts': 0,
+                        'Graduate College': 1,
+                        'Law': 0,
+                        'Unknown': 0,
+                    },
+                    // Mock drops data — Data source (future): consultants table with separation_reason column
+                    drops: [
+                        { name: 'John Smith', lastRole: 'PL', lastSemester: 'S25', reason: 'resigned', resignationReason: 'Better opportunity' },
+                        { name: 'Jane Doe', lastRole: 'Sr', lastSemester: 'S25', reason: 'fired', resignationReason: undefined },
+                        { name: 'Bob Brown', lastRole: 'A', lastSemester: 'F24', reason: 'resigned', resignationReason: 'Personal reasons' },
+                        { name: 'Sarah Wilson', lastRole: 'Pc', lastSemester: 'F24', reason: 'resigned', resignationReason: 'Relocation' },
+                    ],
+                    dropsBreakdown: { fired: 1, resigned: 3 }
                 });
             }, 800);
         });

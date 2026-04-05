@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { FilterBar } from '../components/filters/FilterBar';
-import { RoleDistributionChart, GenderChart, ProjectStaffingChart, DemographicChart } from '../components/dashboard/Charts';
+import { RoleDistributionChart, GenderChart, ProjectStaffingChart, DemographicChart, MajorDistributionChart, CollegeDistributionChart } from '../components/dashboard/Charts';
 import { useDashboardStats, useProjects } from '../hooks/useDashboardData';
 import { Users, Briefcase, UserCheck } from 'lucide-react';
 
@@ -102,6 +102,8 @@ export function Dashboard() {
                         <RoleDistributionChart data={stats.roleDistribution} />
                         <GenderChart data={stats.genderDistribution} />
                         <DemographicChart data={stats.demographicChart} />
+                        <MajorDistributionChart data={stats.majorDistribution} />
+                        <CollegeDistributionChart data={stats.collegeDistribution} />
                     </div>
                     {/* Staffing per project (full-width, clickable bars) */}
                     <div className="pt-6">

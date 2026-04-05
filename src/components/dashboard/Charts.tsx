@@ -298,3 +298,233 @@ export function DemographicChart({ data }: { data: DashboardStats['demographicCh
         </div>
     );
 }
+
+export function MajorDistributionChart({ data }: { data: DashboardStats['majorDistribution'] }) {
+    const [isExpanded, setIsExpanded] = useState(false);
+    
+    const chartData = Object.entries(data || {})
+        .map(([major, count]) => ({ name: major, value: count }))
+        .sort((a, b) => b.value - a.value);
+
+    const MAJOR_COLORS: Record<string, string> = {
+        'Computer Science': '#6366f1',
+        'Engineering': '#8b5cf6',
+        'Business': '#a855f7',
+        'Data Science & Analytics': '#ec4899',
+        'Economics': '#d946ef',
+        'Science': '#f43f5e',
+        'Liberal Arts & Sciences': '#f97316',
+        'Communications': '#eab308',
+        'Other': '#6b7280',
+        'Unknown': '#6b7280',
+    };
+
+    if (isExpanded) {
+        return (
+            <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                <div className="bg-gray-900 border border-gray-800 rounded-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
+                    <div className="sticky top-0 flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900">
+                        <h3 className="text-gray-400 font-medium">Major Distribution</h3>
+                        <button
+                            onClick={() => setIsExpanded(false)}
+                            className="text-gray-400 hover:text-gray-200 text-2xl"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                    <div className="p-4" style={{ height: '600px' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                                data={chartData}
+                                layout="vertical"
+                                margin={{ top: 5, right: 30, left: 250, bottom: 5 }}
+                            >
+                                <XAxis type="number" />
+                                <YAxis dataKey="name" type="category" width={240} tick={{ fontSize: 12 }} />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', borderRadius: 8 }}
+                                    labelStyle={{ color: '#f3f4f6' }}
+                                    itemStyle={{ color: '#fca5a5' }}
+                                />
+                                <Bar dataKey="value" fill="#6366f1" radius={[0, 8, 8, 0]}>
+                                    {chartData.map((entry, index) => (
+                                        <Cell 
+                                            key={`cell-${index}`} 
+                                            fill={MAJOR_COLORS[entry.name] || COLORS[index % COLORS.length]} 
+                                        />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div 
+            className="h-80 w-full bg-gray-900 border border-gray-800 rounded-xl p-4 cursor-pointer hover:border-gray-700 transition-colors"
+            onClick={() => setIsExpanded(true)}
+        >
+            <h3 className="text-gray-400 font-medium mb-4">Major Distribution (Click to expand)</h3>
+            <ResponsiveContainer width="100%" height="85%">
+                <BarChart
+                    data={chartData}
+                    layout="vertical"
+                    margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+                >
+                    <XAxis type="number" />
+                    <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 12 }} />
+                    <Tooltip
+                        contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', borderRadius: 8 }}
+                        labelStyle={{ color: '#f3f4f6' }}
+                        itemStyle={{ color: '#fca5a5' }}
+                    />
+                    <Bar dataKey="value" fill="#6366f1" radius={[0, 8, 8, 0]}>
+                        {chartData.map((entry, index) => (
+                            <Cell 
+                                key={`cell-${index}`} 
+                                fill={MAJOR_COLORS[entry.name] || COLORS[index % COLORS.length]} 
+                            />
+                        ))}
+                    </Bar>
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
+export function CollegeDistributionChart({ data }: { data: DashboardStats['collegeDistribution'] }) {
+    const chartData = Object.entries(data || {}).map(([college, count]) => ({ 
+        name: college, 
+        value: count 
+    }));
+
+    const COLLEGE_COLORS: Record<string, string> = {
+        'Grainger College of Engineering': '#6366f1',
+        'Gies College of Business': '#8b5cf6',
+        'College of Liberal Arts & Sciences': '#a855f7',
+        'College of Fine & Applied Arts': '#d946ef',
+        'ACES': '#ec4899',
+        'College of Media': '#f43f5e',
+        'College of Education': '#f97316',
+        'College of Law': '#eab308',
+        'College of Veterinary Medicine': '#84cc16',
+        'School of Social Work': '#06b6d4',
+        'Graduate College': '#10b981',
+        'Unknown': '#6b7280',
+    };
+
+    return (
+        <div className="h-80 w-full bg-gray-900 border border-gray-800 rounded-xl p-4 overflow-hidden">
+            <h3 className="text-gray-400 font-medium mb-4">College Distribution</h3>
+            <ResponsiveContainer width="100%" height={280}>
+                <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <Pie
+                        data={chartData}
+                        cx="45%"
+                        cy="40%"
+                        innerRadius={50}
+                        outerRadius={70}
+                        paddingAngle={3}
+                        dataKey="value"
+                    >
+                        {chartData.map((entry, index) => (
+                            <Cell 
+                                key={`cell-${index}`} 
+                                fill={COLLEGE_COLORS[entry.name] || COLORS[index % COLORS.length]} 
+                            />
+                        ))}
+                    </Pie>
+                    <Tooltip
+                        contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', borderRadius: 8 }}
+                        labelStyle={{ color: '#f3f4f6' }}
+                        itemStyle={{ color: '#fca5a5' }}
+                    />
+                    <Legend wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }} />
+                </PieChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
+export function DropsBox({ drops }: { drops?: DashboardStats['drops'] }) {
+    const firedDrops = drops?.filter(d => d.reason === 'fired') || [];
+    
+    return (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <div className="space-y-4">
+                {/* Header */}
+                <div>
+                    <h3 className="text-gray-300 font-medium text-sm mb-1">Drops (Fired)</h3>
+                    <p className="text-gray-600 text-xs">Consultants removed from program</p>
+                </div>
+
+                {/* Count */}
+                <div className="bg-gray-800 rounded-lg p-3 border border-red-500/30">
+                    <div className="text-gray-500 text-xs font-medium uppercase tracking-wider">Total Fired</div>
+                    <div className="text-3xl font-bold text-red-400 mt-1">{firedDrops.length}</div>
+                </div>
+
+                {/* Drops list */}
+                {firedDrops.length > 0 ? (
+                    <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
+                        {firedDrops.map((drop, idx) => (
+                            <div key={idx} className="flex items-start justify-between p-2 bg-gray-800 rounded-lg border-l-2 border-red-500">
+                                <div className="flex-1">
+                                    <div className="text-gray-200 text-sm font-medium">{drop.name}</div>
+                                    <div className="text-gray-500 text-xs">
+                                        {drop.lastRole} • {drop.lastSemester}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-gray-500 text-sm text-center py-4">No fired consultants in this period</p>
+                )}
+            </div>
+        </div>
+    );
+}
+
+export function ResignedBox({ drops }: { drops?: DashboardStats['drops'] }) {
+    const resignedDrops = drops?.filter(d => d.reason === 'resigned') || [];
+    
+    return (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <div className="space-y-4">
+                {/* Header */}
+                <div>
+                    <h3 className="text-gray-300 font-medium text-sm mb-1">Resigned</h3>
+                    <p className="text-gray-600 text-xs">Consultants who resigned voluntarily</p>
+                </div>
+
+                {/* Count */}
+                <div className="bg-gray-800 rounded-lg p-3 border border-yellow-500/30">
+                    <div className="text-gray-500 text-xs font-medium uppercase tracking-wider">Total Resigned</div>
+                    <div className="text-3xl font-bold text-yellow-400 mt-1">{resignedDrops.length}</div>
+                </div>
+
+                {/* Resigned list */}
+                {resignedDrops.length > 0 ? (
+                    <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
+                        {resignedDrops.map((drop, idx) => (
+                            <div key={idx} className="flex items-start justify-between p-2 bg-gray-800 rounded-lg border-l-2 border-yellow-500">
+                                <div className="flex-1">
+                                    <div className="text-gray-200 text-sm font-medium">{drop.name}</div>
+                                    <div className="text-gray-500 text-xs">
+                                        {drop.lastRole} • {drop.lastSemester}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-gray-500 text-sm text-center py-4">No resignations in this period</p>
+                )}
+            </div>
+        </div>
+    );
+}

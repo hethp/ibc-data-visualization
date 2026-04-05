@@ -3,6 +3,70 @@ import { pool } from '../config/db';
 
 const router = Router();
 
+// Helper function to categorize majors into broader groups
+function categorizeMajor(major: string): string {
+    if (!major || major === 'Unknown') return 'Unknown';
+    
+    const lowerMajor = major.toLowerCase();
+    
+    // Business category
+    if (lowerMajor.includes('business') || lowerMajor.includes('accounting') || 
+        lowerMajor.includes('accounting') || lowerMajor.includes('finance') ||
+        lowerMajor.includes('accountancy') || lowerMajor.includes('supply chain') ||
+        lowerMajor.includes('information systems') || lowerMajor.includes('marketing') ||
+        lowerMajor.includes('management')) {
+        return 'Business';
+    }
+    
+    // Computer Science category
+    if (lowerMajor.includes('computer science') || lowerMajor.includes('cs') ||
+        lowerMajor.includes('software') || lowerMajor.includes('informatics')) {
+        return 'Computer Science';
+    }
+    
+    // Engineering category
+    if (lowerMajor.includes('engineering') || lowerMajor.includes('bioengineering') ||
+        lowerMajor.includes('civil') || lowerMajor.includes('mechanical') ||
+        lowerMajor.includes('electrical') || lowerMajor.includes('chemical') ||
+        lowerMajor.includes('aerospace') || lowerMajor.includes('industrial')) {
+        return 'Engineering';
+    }
+    
+    // Data Science / Statistics
+    if (lowerMajor.includes('data science') || lowerMajor.includes('statistics') ||
+        lowerMajor.includes('analytics')) {
+        return 'Data Science & Analytics';
+    }
+    
+    // Economics
+    if (lowerMajor.includes('economics') || lowerMajor.includes('econometrics')) {
+        return 'Economics';
+    }
+    
+    // Science (Math, Physics, Chemistry, Biology, etc.)
+    if (lowerMajor.includes('mathematics') || lowerMajor.includes('math') ||
+        lowerMajor.includes('physics') || lowerMajor.includes('chemistry') ||
+        lowerMajor.includes('biology') || lowerMajor.includes('science')) {
+        return 'Science';
+    }
+    
+    // Liberal Arts & Sciences
+    if (lowerMajor.includes('liberal arts') || lowerMajor.includes('psychology') ||
+        lowerMajor.includes('sociology') || lowerMajor.includes('anthropology')) {
+        return 'Liberal Arts & Sciences';
+    }
+    
+    // Communications & Journalism
+    if (lowerMajor.includes('communication') || lowerMajor.includes('journalism') ||
+        lowerMajor.includes('media')) {
+        return 'Communications';
+    }
+    
+    // Default to 'Other'
+    return 'Other';
+}
+
+
 // Login endpoint - verify email exists in consultants table
 router.post('/auth/login', async (req, res) => {
     try {
@@ -95,6 +159,7 @@ router.get('/consultants', async (req, res) => {
                 u.curr_role as "currentRole",
                 c.year as "yearInSchool",
                 c.major,
+                c.college,
                 CASE WHEN EXISTS (SELECT 1 FROM consultant_projects cp WHERE cp.user_id = u.user_id) THEN true ELSE false END as active
             FROM users u
             LEFT JOIN consultants c ON u.user_id = c.user_id
@@ -227,6 +292,34 @@ router.get('/stats', async (req, res) => {
             if (demographicChart[k] === 0) delete demographicChart[k];
         });
 
+        // Major Distribution - pull from users joined with consultants
+        const majorRes = await pool.query(`
+            SELECT COALESCE(c.major, 'Unknown') as major, COUNT(DISTINCT u.user_id) as count
+            FROM users u
+            JOIN consultants c ON u.user_id = c.user_id
+            GROUP BY c.major
+        `);
+
+        const majorDistribution: Record<string, number> = {};
+        majorRes.rows.forEach(row => {
+            // Categorize the major into broader groups
+            const category = categorizeMajor(row.major);
+            majorDistribution[category] = (majorDistribution[category] || 0) + parseInt(row.count);
+        });
+
+        // College Distribution - pull from users joined with consultants
+        const collegeRes = await pool.query(`
+            SELECT COALESCE(c.college, 'Unknown') as college, COUNT(DISTINCT u.user_id) as count
+            FROM users u
+            JOIN consultants c ON u.user_id = c.user_id
+            GROUP BY c.college
+        `);
+
+        const collegeDistribution: Record<string, number> = {};
+        collegeRes.rows.forEach(row => {
+            collegeDistribution[row.college] = parseInt(row.count);
+        });
+
         // Role Distribution (users in this semester)
         const roleRes = await pool.query(`
             SELECT cp.role, COUNT(DISTINCT cp.user_id) as count
@@ -353,7 +446,9 @@ router.get('/stats', async (req, res) => {
             genderDistribution,
             roleDistribution,
             projectStaffing,
-            demographicChart
+            demographicChart,
+            majorDistribution,
+            collegeDistribution
         });
 
     } catch (err) {

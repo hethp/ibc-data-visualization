@@ -260,6 +260,8 @@ export function PromotionsTable({ promotions }: { promotions: Promotion[] }) {
    DROPS TABLE — no reason column
    ══════════════════════════════════════ */
 export function DropsTable({ drops }: { drops: Drop[] }) {
+    const firedDrops = drops?.filter(d => d.reason === 'fired') || [];
+    
     return (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -268,7 +270,7 @@ export function DropsTable({ drops }: { drops: Drop[] }) {
                     Drops <span className="text-gray-600 text-xs">(MOCK DATA)</span>
                 </h3>
             </div>
-            {drops.length === 0 ? (
+            {firedDrops.length === 0 ? (
                 <p className="text-gray-500 text-sm text-center py-4">No drops in selected semesters</p>
             ) : (
                 <div className="overflow-x-auto">
@@ -281,7 +283,7 @@ export function DropsTable({ drops }: { drops: Drop[] }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {drops.map((d, i) => (
+                            {firedDrops.map((d, i) => (
                                 <tr
                                     key={i}
                                     className="border-b border-gray-800/50 hover:bg-gray-800/40 transition-colors"
@@ -347,6 +349,53 @@ export function DeferralsTable({ deferrals }: { deferrals: Deferral[] }) {
                         </tbody>
                     </table>
                 </div>
+            )}
+        </div>
+    );
+}
+
+/* ══════════════════════════════════════
+   RESIGNED TABLE — Shows consultants who resigned
+   Same format as Drops/Deferrals tables
+   ══════════════════════════════════════ */
+export function ResignedTable({ drops }: { drops: Drop[] }) {
+    const resignedDrops = drops?.filter(d => d.reason === 'resigned') || [];
+
+    return (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <h3 className="text-gray-300 font-medium text-sm mb-4 flex items-center gap-2">
+                <UserMinus size={18} className="text-yellow-400" />
+                Resigned (MOCK DATA)
+            </h3>
+            {resignedDrops.length > 0 ? (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead>
+                            <tr className="border-b border-gray-700">
+                                <th className="py-2.5 pr-4 text-gray-400">Name</th>
+                                <th className="py-2.5 pr-4 text-gray-400">Role</th>
+                                <th className="py-2.5 pr-4 text-gray-400">Reason</th>
+                                <th className="py-2.5 text-gray-400">Resigned From</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800">
+                            {resignedDrops.map((d, idx) => (
+                                <tr key={idx} className="hover:bg-gray-800/50 transition-colors">
+                                    <td className="py-2.5 pr-4 text-gray-200">{d.name}</td>
+                                    <td className="py-2.5 pr-4">
+                                        <span className="bg-yellow-900/30 text-yellow-300 px-2 py-1 rounded text-xs font-semibold">
+                                            {d.lastRole}
+                                        </span>
+                                    </td>
+                                    <td className="py-2.5 pr-4 text-gray-500 text-xs">{d.resignationReason || '—'}</td>
+                                    <td className="py-2.5 text-gray-500">{d.lastSemester}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                <p className="text-gray-500 text-center py-4">No resignations in this period</p>
             )}
         </div>
     );
