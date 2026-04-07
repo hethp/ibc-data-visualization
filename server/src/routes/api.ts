@@ -3,6 +3,28 @@ import { pool } from '../config/db';
 
 const router = Router();
 
+// Login endpoint - verify email exists in consultants table
+router.post('/auth/login', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'Email is required' });
+
+        const result = await pool.query(`
+            SELECT u.email, u.name, u.user_id
+            FROM users u
+            INNER JOIN consultants c ON u.user_id = c.user_id
+            WHERE LOWER(TRIM(u.email)) = LOWER(TRIM($1))
+        `, [email]);
+
+        if (result.rows.length === 0) return res.status(401).json({ error: 'Invalid email. Access denied.' });
+
+        res.json({ success: true, user: { email: result.rows[0].email, name: result.rows[0].name } });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to authenticate' });
+    }
+});
+
 // Helper function to categorize majors into broader groups
 function categorizeMajor(major: string): string {
     if (!major || major === 'Unknown') return 'Unknown';

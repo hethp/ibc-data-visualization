@@ -2,199 +2,193 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>IBC Platform Login</title>
-
+  <title>IBC Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0f1f3d;
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --cream: #f8f5ef;
+      --muted: #8a94a8;
+    }
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'DM Sans', sans-serif;
+      background: var(--navy);
+      min-height: 100vh;
       display: flex;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
     }
-
-    .container {
-      text-align: center;
-      background: white;
-      padding: 50px;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      width: 400px;
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
     }
-
-    h1 {
-      margin-bottom: 10px;
-      color: #333;
+    body::after {
+      content: '';
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
     }
-
-    .subtitle {
-      color: #666;
-      margin-bottom: 30px;
-      font-size: 14px;
+    .card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 4px;
+      padding: 56px 52px;
+      width: 420px;
+      backdrop-filter: blur(12px);
+      animation: fadeUp 0.6s ease both;
     }
-
-    .form-group {
-      margin-bottom: 20px;
-      text-align: left;
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: #333;
-      font-weight: 500;
+    .logo-mark {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 40px;
     }
-
-    input[type="email"] {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--gold);
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Playfair Display', serif;
       font-size: 16px;
-      box-sizing: border-box;
-      transition: border-color 0.2s ease;
-    }
-
-    input[type="email"]:focus {
-      outline: none;
-      border-color: #2d6cdf;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 15px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
+      color: var(--navy);
       font-weight: 600;
-      background-color: #2d6cdf;
-      color: white;
+    }
+    .logo-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--cream);
+      letter-spacing: 0.02em;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      color: var(--cream);
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+    .divider {
+      width: 40px;
+      height: 2px;
+      background: var(--gold);
+      margin-bottom: 40px;
+    }
+    .sso-btn {
+      width: 100%;
+      padding: 16px 20px;
+      background: transparent;
+      border: 1px solid rgba(201,168,76,0.4);
+      border-radius: 3px;
+      color: var(--cream);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
     }
-
-    .btn:hover {
-      background-color: #1b4ea8;
+    .sso-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(201,168,76,0.06);
+      opacity: 0;
+      transition: opacity 0.2s;
     }
-
-    .btn:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
+    .sso-btn:hover { border-color: var(--gold); color: var(--gold-light); }
+    .sso-btn:hover::before { opacity: 1; }
+    .sso-btn:active { transform: scale(0.99); }
+    .ms-icon {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5px;
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
     }
-
-    .error-message {
-      color: #d32f2f;
-      margin-top: 10px;
-      font-size: 14px;
-      display: none;
-    }
-
-    .error-message.show {
-      display: block;
-    }
-
-    .success-message {
-      color: #2e7d32;
-      margin-top: 10px;
-      font-size: 14px;
-      display: none;
-    }
-
-    .success-message.show {
-      display: block;
+    .ms-icon span { display: block; border-radius: 1px; }
+    .ms-icon span:nth-child(1) { background: #f25022; }
+    .ms-icon span:nth-child(2) { background: #7fba00; }
+    .ms-icon span:nth-child(3) { background: #00a4ef; }
+    .ms-icon span:nth-child(4) { background: #ffb900; }
+    .footer-note {
+      margin-top: 28px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
     }
   </style>
 </head>
-
 <body>
-  <div class="container">
-    <h1>IBC Portal</h1>
-    <p class="subtitle">Please sign in with your consultant email</p>
-
-    <form id="loginForm">
-      <div class="form-group">
-        <label for="email">Email Address</label>
-        <input 
-          type="email" 
-          id="email" 
-          name="email" 
-          placeholder="your.email@example.com" 
-          required 
-          autocomplete="email"
-        />
+  <div class="card">
+    <div class="logo-mark">
+      <div class="logo-icon">IBC</div>
+      <span class="logo-text">Illinois Business Consulting</span>
+    </div>
+    <h1>Member Portal</h1>
+    <div class="divider"></div>
+    <p class="subtitle">Sign in with your UIUC Microsoft account to access the portal.</p>
+    <button class="sso-btn" id="msLoginBtn">
+      <div class="ms-icon">
+        <span></span><span></span><span></span><span></span>
       </div>
-
-      <button type="submit" class="btn" id="submitBtn">Sign In</button>
-
-      <div class="error-message" id="errorMessage"></div>
-      <div class="success-message" id="successMessage"></div>
-    </form>
+      Continue with UIUC Microsoft
+    </button>
+    <p class="footer-note">
+      Only authorized IBC members can access this portal.<br>
+      Contact your admin if you need access.
+    </p>
   </div>
-
   <script>
-    // API URL - use relative path when served from same origin
-    const API_URL = '/api';
-    
-    const form = document.getElementById('loginForm');
-    const emailInput = document.getElementById('email');
-    const submitBtn = document.getElementById('submitBtn');
-    const errorMessage = document.getElementById('errorMessage');
-    const successMessage = document.getElementById('successMessage');
+    localStorage.removeItem('ibc_jwt');
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      // Reset messages
-      errorMessage.classList.remove('show');
-      successMessage.classList.remove('show');
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Signing in...';
-
-      const email = emailInput.value.trim();
-
-      try {
-        const response = await fetch(`${API_URL}/auth/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Authentication failed');
-        }
-
-        // Store authentication in localStorage
-        localStorage.setItem('ibc_authenticated', 'true');
-        localStorage.setItem('ibc_user_email', data.user.email);
-        localStorage.setItem('ibc_user_name', data.user.name || '');
-
-        // Show success message briefly, then redirect
-        successMessage.textContent = 'Login successful! Redirecting...';
-        successMessage.classList.add('show');
-
-        setTimeout(() => {
-          window.location.href = 'index.html';
-        }, 500);
-
-      } catch (error) {
-        errorMessage.textContent = error.message || 'An error occurred. Please try again.';
-        errorMessage.classList.add('show');
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Sign In';
-      }
-    });
-
-    // Check if already authenticated
-    if (localStorage.getItem('ibc_authenticated') === 'true') {
-      window.location.href = 'index.html';
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'unauthorized') {
+      const note = document.querySelector('.footer-note');
+      note.innerHTML = '⚠️ Your account is not registered with IBC.<br>Contact your admin for access.';
+      note.style.color = '#e57373';
     }
+
+    document.getElementById('msLoginBtn').addEventListener('click', () => {
+      window.location.href = 'http://localhost:3000/auth/login';
+    });
   </script>
 </body>
 </html>
-

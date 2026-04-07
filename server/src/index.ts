@@ -29,9 +29,11 @@ app.get('/health', async (req, res) => {
 });
 
 import apiRoutes from './routes/api';
+import authRoutes from './routes/auth';
 
-// Mount API routes
+// Mount routes
 app.use('/api', apiRoutes);
+app.use('/auth', authRoutes);
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);

@@ -263,7 +263,7 @@ export function ProjectStaffingChart({ data, onBarClick, selectedProjects = [], 
 
 export function DemographicChart({ data }: { data: DashboardStats['demographicChart'] }) {
     const yearOrder = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Master\'s'];
-    const chartData = yearOrder.map((y) => ({ name: y, value: data[y] || 0 }));
+    const chartData = yearOrder.map((y) => ({ name: y, value: (data ?? {})[y] || 0 }));
     const total = chartData.reduce((sum, entry) => sum + entry.value, 0);
 
     return (
