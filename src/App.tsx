@@ -9,8 +9,6 @@ import { Trends } from './pages/Trends';
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const isDark = true;
-
   return (
     <QueryClientProvider client={queryClient}>
       <ConfigProvider

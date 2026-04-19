@@ -64,7 +64,7 @@ export const mockApi = {
                     totalProjects,
                     genderDistribution: projectIds && projectIds.length ? { 'Male': 3, 'Female': 2 } : { 'Male': 25, 'Female': 20 },
                     roleDistribution: projectIds && projectIds.length
-                        ? { 'PL': 1, 'Pc': 1, 'Sr': 1, 'A': 1, 'T': 0, 'NC': 0, 'EC': 0, 'SC': 0, 'PM': 0, 'SM': 0, 'Associate': 0, 'Senior Associate': 0, 'Principal': 0, 'Team Lead': 0 }
+                        ? { 'PL': 1, 'Pc': 1, 'Sr': 1, 'A': 1, 'T': 0, 'NC': 0, 'EC': 0, 'SC': 0, 'PM': 0, 'SM': 0, 'SD': 0, 'Associate': 0, 'Senior Associate': 0, 'Principal': 0, 'Team Lead': 0 }
                         : {
                               'PL': 5,
                               'Pc': 10,
@@ -76,6 +76,7 @@ export const mockApi = {
                               'SC': 0,
                               'PM': 0,
                               'SM': 0,
+                              'SD': 0,
                               'Associate': 0,
                               'Senior Associate': 0,
                               'Principal': 0,

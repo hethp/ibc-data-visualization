@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, LabelList } from 'recharts';
 import type { DashboardStats, Project, Role } from '../../types';
 
@@ -52,9 +52,10 @@ export function RoleDistributionChart({ data }: { data: DashboardStats['roleDist
                         labelStyle={{ color: '#f3f4f6' }}
                         itemStyle={{ color: '#c7d2fe' }}
                         cursor={{ fill: 'transparent' }}
-                        formatter={(value: number, name: string) => {
-                            const percent = total > 0 ? Math.round((value / total) * 100) : 0;
-                            return [`${name}: ${value} (${percent}%)`, 'Consultants'];
+                        formatter={(value: number | undefined, name: string | undefined) => {
+                            const v = value ?? 0;
+                            const percent = total > 0 ? Math.round((v / total) * 100) : 0;
+                            return [`${name ?? ''}: ${v} (${percent}%)`, 'Consultants'] as [string, string];
                         }}
                     />
                     <Bar
@@ -114,9 +115,10 @@ export function GenderChart({ data }: { data: DashboardStats['genderDistribution
                         }}
                         labelStyle={{ color: '#f3f4f6' }}
                         itemStyle={{ color: '#f9a8d4' }}
-                        formatter={(value: number, name: string) => {
-                            const percent = total > 0 ? Math.round((value / total) * 100) : 0;
-                            return [`${name}: ${value} (${percent}%)`, 'Consultants'];
+                        formatter={(value: number | undefined, name: string | undefined) => {
+                            const v = value ?? 0;
+                            const percent = total > 0 ? Math.round((v / total) * 100) : 0;
+                            return [`${name ?? ''}: ${v} (${percent}%)`, 'Consultants'] as [string, string];
                         }}
                     />
                     <Legend />
@@ -282,9 +284,10 @@ export function DemographicChart({ data }: { data: DashboardStats['demographicCh
                         labelStyle={{ color: '#f3f4f6' }}
                         itemStyle={{ color: '#c4b5fd' }}
                         cursor={{ fill: 'rgba(99,102,241,0.08)' }}
-                        formatter={(value: number, _name: string, props: any) => {
-                            const percent = total > 0 ? Math.round((value / total) * 100) : 0;
-                            return [`${value} students (${percent}%)`, props.payload.name];
+                        formatter={(value: number | undefined, _name: string | undefined, props: any) => {
+                            const v = value ?? 0;
+                            const percent = total > 0 ? Math.round((v / total) * 100) : 0;
+                            return [`${v} students (${percent}%)`, props?.payload?.name ?? ''] as [string, string];
                         }}
                     />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={48}>

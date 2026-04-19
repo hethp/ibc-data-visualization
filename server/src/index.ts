@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static files from the platform directory
-app.use(express.static(path.join(__dirname, '../../platform')));
+app.use(express.static(path.join(__dirname, '../../../platform')));
 
 // Health check endpoint
 app.get('/health', async (req, res) => {

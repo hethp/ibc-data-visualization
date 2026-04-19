@@ -1,4 +1,4 @@
-import { Card, Divider, Switch, Typography } from 'antd';
+import { Card, Switch, Typography } from 'antd';
 import { useTheme } from '../context/ThemeContext';
 
 export function Settings() {

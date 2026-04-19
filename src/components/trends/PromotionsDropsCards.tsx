@@ -188,9 +188,10 @@ export function DropsChart({ drops }: { drops: Drop[] }) {
                         </Pie>
                         <Tooltip
                             {...tooltipStyle}
-                            formatter={(value: number, name: string) => {
-                                const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-                                return [`${value} (${pct}%)`, name];
+                            formatter={(value: number | undefined, name: string | undefined) => {
+                                const v = value ?? 0;
+                                const pct = total > 0 ? Math.round((v / total) * 100) : 0;
+                                return [`${v} (${pct}%)`, name ?? ''] as [string, string];
                             }}
                         />
                         <Legend />
