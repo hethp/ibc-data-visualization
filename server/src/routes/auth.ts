@@ -58,7 +58,7 @@ router.get('/redirect', async (req, res) => {
     console.log('DB result:', result.rows);
 
     if (result.rows.length === 0) {
-      return res.redirect('http://localhost:3000/login.html?error=unauthorized');
+      return res.redirect('/login.html?error=unauthorized');
     }
 
     const appToken = jwt.sign(
@@ -73,7 +73,7 @@ router.get('/redirect', async (req, res) => {
 
     console.log('JWT role:', result.rows[0].curr_role);
 
-    res.redirect(`http://localhost:3000/index.html?token=${appToken}`);
+    res.redirect(`/index.html?token=${appToken}`);
   } catch (err) {
     console.error('Error in auth redirect', err);
     res.status(500).send('SSO token exchange failed');
