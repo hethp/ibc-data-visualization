@@ -35,8 +35,18 @@ router.get('/login', (req, res) => {
 });
 
 router.get('/redirect', async (req, res) => {
+  if (req.query.error) {
+    console.error('Azure returned error:', req.query.error, req.query.error_description);
+    return res.status(400).send(`Azure error: ${req.query.error} — ${req.query.error_description}`);
+  }
+
+  const code = req.query.code as string;
+  if (!code) {
+    return res.status(400).send('No auth code received from Azure');
+  }
+
   const tokenRequest = {
-    code: req.query.code as string,
+    code,
     scopes: ['openid', 'profile', 'email'],
     redirectUri,
   };
@@ -74,9 +84,9 @@ router.get('/redirect', async (req, res) => {
     console.log('JWT role:', result.rows[0].curr_role);
 
     res.redirect(`/index.html?token=${appToken}`);
-  } catch (err) {
-    console.error('Error in auth redirect', err);
-    res.status(500).send('SSO token exchange failed');
+  } catch (err: any) {
+    console.error('MSAL error:', JSON.stringify(err, null, 2));
+    res.status(500).send(`SSO token exchange failed: ${err?.message || err}`);
   }
 });
 
