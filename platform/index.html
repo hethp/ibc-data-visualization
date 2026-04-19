@@ -181,7 +181,7 @@
     <h1 id="userName">Member</h1>
     <div class="divider"></div>
     <nav class="nav-grid">
-      <a class="nav-btn" href="https://ibc-data-visualization-gamma.vercel.app" target="_blank">
+      <a class="nav-btn" id="dataVizBtn" href="https://ibc-data-visualization-gamma.vercel.app" target="_blank">
         <div class="nav-btn-content">
           <span>Data Visualization</span>
           <span class="nav-btn-label">Analytics & reporting</span>
@@ -232,10 +232,8 @@
           display.includes(',') ? display.split(',')[1].trim() : display.split(' ')[0];
 
         if (!['SD', 'SM'].includes(payload.role)) {
-          document.getElementById('staffingBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            alert('Access denied. This tool is only available to Senior Directors and Senior Managers.');
-          });
+          document.getElementById('dataVizBtn').style.display = 'none';
+          document.getElementById('staffingBtn').style.display = 'none';
         }
 
       } catch (e) {
