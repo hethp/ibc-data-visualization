@@ -1,11 +1,21 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8" />
   <title>IBC Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap"
+    rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     :root {
       --navy: #0f1f3d;
       --gold: #c9a84c;
@@ -13,6 +23,7 @@
       --cream: #f8f5ef;
       --muted: #8a94a8;
     }
+
     body {
       font-family: 'DM Sans', sans-serif;
       background: var(--navy);
@@ -23,48 +34,61 @@
       overflow: hidden;
       position: relative;
     }
+
     body::before {
       content: '';
       position: fixed;
       inset: 0;
       background-image:
-        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+        linear-gradient(rgba(201, 168, 76, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201, 168, 76, 0.04) 1px, transparent 1px);
       background-size: 60px 60px;
       pointer-events: none;
     }
+
     body::after {
       content: '';
       position: fixed;
       width: 600px;
       height: 600px;
-      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(201, 168, 76, 0.08) 0%, transparent 70%);
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       pointer-events: none;
     }
+
     .card {
       position: relative;
       z-index: 1;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(201,168,76,0.2);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(201, 168, 76, 0.2);
       border-radius: 4px;
       padding: 56px 52px;
       width: 420px;
       backdrop-filter: blur(12px);
       animation: fadeUp 0.6s ease both;
     }
+
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
+
     .logo-mark {
       display: flex;
       align-items: center;
       gap: 12px;
       margin-bottom: 40px;
     }
+
     .logo-icon {
       width: 36px;
       height: 36px;
@@ -78,12 +102,14 @@
       color: var(--navy);
       font-weight: 600;
     }
+
     .logo-text {
       font-family: 'Playfair Display', serif;
       font-size: 20px;
       color: var(--cream);
       letter-spacing: 0.02em;
     }
+
     h1 {
       font-family: 'Playfair Display', serif;
       font-size: 28px;
@@ -92,23 +118,26 @@
       line-height: 1.2;
       margin-bottom: 10px;
     }
+
     .subtitle {
       font-size: 14px;
       color: var(--muted);
       line-height: 1.6;
       margin-bottom: 40px;
     }
+
     .divider {
       width: 40px;
       height: 2px;
       background: var(--gold);
       margin-bottom: 40px;
     }
+
     .sso-btn {
       width: 100%;
       padding: 16px 20px;
       background: transparent;
-      border: 1px solid rgba(201,168,76,0.4);
+      border: 1px solid rgba(201, 168, 76, 0.4);
       border-radius: 3px;
       color: var(--cream);
       font-family: 'DM Sans', sans-serif;
@@ -123,17 +152,29 @@
       position: relative;
       overflow: hidden;
     }
+
     .sso-btn::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: rgba(201,168,76,0.06);
+      background: rgba(201, 168, 76, 0.06);
       opacity: 0;
       transition: opacity 0.2s;
     }
-    .sso-btn:hover { border-color: var(--gold); color: var(--gold-light); }
-    .sso-btn:hover::before { opacity: 1; }
-    .sso-btn:active { transform: scale(0.99); }
+
+    .sso-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold-light);
+    }
+
+    .sso-btn:hover::before {
+      opacity: 1;
+    }
+
+    .sso-btn:active {
+      transform: scale(0.99);
+    }
+
     .ms-icon {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -142,11 +183,28 @@
       height: 18px;
       flex-shrink: 0;
     }
-    .ms-icon span { display: block; border-radius: 1px; }
-    .ms-icon span:nth-child(1) { background: #f25022; }
-    .ms-icon span:nth-child(2) { background: #7fba00; }
-    .ms-icon span:nth-child(3) { background: #00a4ef; }
-    .ms-icon span:nth-child(4) { background: #ffb900; }
+
+    .ms-icon span {
+      display: block;
+      border-radius: 1px;
+    }
+
+    .ms-icon span:nth-child(1) {
+      background: #f25022;
+    }
+
+    .ms-icon span:nth-child(2) {
+      background: #7fba00;
+    }
+
+    .ms-icon span:nth-child(3) {
+      background: #00a4ef;
+    }
+
+    .ms-icon span:nth-child(4) {
+      background: #ffb900;
+    }
+
     .footer-note {
       margin-top: 28px;
       font-size: 12px;
@@ -156,6 +214,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="card">
     <div class="logo-mark">
@@ -191,4 +250,5 @@
     });
   </script>
 </body>
+
 </html>
